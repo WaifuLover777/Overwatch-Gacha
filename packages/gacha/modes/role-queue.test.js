@@ -12,10 +12,35 @@ test('5 players give exactly 1 tank / 2 damage / 2 support', () => {
   }
 });
 
-test('scarcity order: the tank always lands with 1..3 players', () => {
-  for (let n = 1; n <= 3; n++) {
+test('a short roster is not forced into a fixed comp', () => {
+  // Regression: an earlier "tank first" rule made every roster under 5 players
+  // deterministic - one player was always the tank, two were always tank+damage.
+  for (let n = 1; n <= 4; n++) {
+    const comps = new Set();
+    const rolesSeen = new Set();
     for (let i = 0; i < N; i++) {
-      assert.equal(countBy(assignRoles(free(n))).tank, 1, `${n} players without a tank`);
+      const roles = assignRoles(free(n));
+      comps.add(roles.slice().sort().join('/'));
+      for (const r of roles) rolesSeen.add(r);
+    }
+    assert.ok(comps.size > 1, `${n} players always produced the same comp`);
+    assert.deepEqual([...rolesSeen].sort(), ['damage', 'support', 'tank'], `${n} players never saw every role`);
+  }
+});
+
+test('a lone player can roll any of the three roles', () => {
+  const seen = new Set();
+  for (let i = 0; i < N; i++) seen.add(assignRoles(free(1))[0]);
+  assert.deepEqual([...seen].sort(), ['damage', 'support', 'tank']);
+});
+
+test('the caps hold at every roster size', () => {
+  for (let n = 0; n <= maxPlayers; n++) {
+    for (let i = 0; i < 300; i++) {
+      const counts = countBy(assignRoles(free(n)));
+      for (const role of ROLES) {
+        assert.ok(counts[role] <= caps[role], `${n} players exceeded the ${role} cap`);
+      }
     }
   }
 });
@@ -80,9 +105,9 @@ test('too many players pinned to one role is rejected by name', () => {
 });
 
 test('flexible sets that still cannot fill the comp are rejected', () => {
-  // Nobody will tank, so 1 Tank can never be met.
+  // Five players who all refuse to tank: 2 Damage + 2 Support only covers four.
   const noTanks = Array(5).fill(['damage', 'support']);
-  assert.throws(() => assignRoles(noTanks), /cannot fill Role Queue's 1 Tank \/ 2 Damage \/ 2 Support/);
+  assert.throws(() => assignRoles(noTanks), /cannot make a legal Role Queue team/);
 });
 
 test('junk in the accepted list is treated as no preference', () => {

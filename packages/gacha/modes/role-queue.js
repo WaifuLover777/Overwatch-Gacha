@@ -5,7 +5,6 @@
 import {
   ROLES,
   ROLE_LABELS,
-  countBy,
   countPinned,
   findAssignments,
   normalizeAllowed,
@@ -22,26 +21,21 @@ export const rules =
 export const maxPlayers = 5;
 
 /**
- * Hard caps per role. They add up to maxPlayers, which is what makes 1-2-2 exact.
- * The UI reads this to explain refusals without knowing the rules itself.
+ * Hard caps per role, and the only rule this mode has.
+ *
+ * They add up to maxPlayers, so a full team of 5 can only be 1 / 2 / 2 — the
+ * exact composition falls out of the caps instead of being imposed on top.
+ * That matters below 5: a trio is free to roll 2 Damage and a Support with no
+ * tank, exactly as they could pick in game. An earlier version forced a
+ * "tank first" order here, which made every short roster deterministic (one
+ * player was always the tank, two were always tank + damage).
  */
 export const caps = { tank: 1, damage: 2, support: 2 };
 
-/** Scarcity order: with fewer than 5 players the tank is filled first. */
-const PRIORITY = ['tank', 'damage', 'support', 'damage', 'support'];
+const describeCaps = () =>
+  ROLES.map((r) => `${caps[r]} ${ROLE_LABELS[r]}`).join(', ');
 
-/** The exact composition owed to `n` players. At n = 5 this is 1 / 2 / 2. */
-const target = (n) => countBy(PRIORITY.slice(0, n));
-
-const describe = (counts) =>
-  ROLES.filter((r) => counts[r] > 0)
-    .map((r) => `${counts[r]} ${ROLE_LABELS[r]}`)
-    .join(' / ');
-
-const isValid = (counts, n) => {
-  const want = target(n);
-  return ROLES.every((r) => counts[r] === want[r]);
-};
+const isValid = (counts) => ROLES.every((r) => counts[r] <= caps[r]);
 
 /**
  * @param {(import('../shared.js').Role|import('../shared.js').Role[]|null)[]} allowed
@@ -62,10 +56,10 @@ export function assignRoles(allowed = []) {
     }
   }
 
-  const options = findAssignments(sets, (c) => isValid(c, sets.length));
+  const options = findAssignments(sets, isValid);
   if (!options.length) {
     throw new Error(
-      `Those role picks cannot fill ${label}'s ${describe(target(sets.length))}.`,
+      `Those role picks cannot make a legal ${label} team (at most ${describeCaps()}).`,
     );
   }
   return pick(options);
@@ -76,5 +70,5 @@ export function canAssign(allowed = []) {
   const sets = normalizeAllowed(allowed);
   const pinned = countPinned(sets);
   if (ROLES.some((role) => pinned[role] > caps[role])) return false;
-  return findAssignments(sets, (c) => isValid(c, sets.length), 1).length > 0;
+  return findAssignments(sets, isValid, 1).length > 0;
 }

@@ -9,7 +9,10 @@ and everyone gets a hero — **following the game's real composition rules**.
 | **Open Queue** (6v6) | 6 | at most 2 Tanks; Damage and Support uncapped |
 
 No duplicate heroes in either mode (the game's hero limit).
-With fewer players, Role Queue fills in scarcity order — the tank first.
+
+Those numbers are caps, not quotas. In Role Queue they add up to 5, so a full team can
+only be 1 / 2 / 2 — but a group of three still rolls freely inside the caps and may well
+come up with no tank, exactly as they could pick in game.
 
 > Open Queue sets no minimum on tanks, so a draw can come up with 0.
 > That is the actual rule of the game.
