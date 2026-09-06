@@ -203,6 +203,17 @@ body {
   background: var(--pick);
 }
 
+/* The mode's cap for this role is already taken by other players. */
+.role-pick:disabled {
+  opacity: 0.28;
+  cursor: not-allowed;
+}
+
+.role-pick:disabled:hover {
+  color: var(--dim);
+  border-color: var(--line);
+}
+
 /* ---------- button ---------- */
 
 .spin {

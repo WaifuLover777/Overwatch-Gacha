@@ -12,7 +12,10 @@ export const rules =
   'Lock a role on a player to force it; leave it unset and the roulette decides.';
 export const maxPlayers = 5;
 
-/** Hard caps per role. They add up to maxPlayers, which is what makes 1-2-2 exact. */
+/**
+ * Hard caps per role. They add up to maxPlayers, which is what makes 1-2-2 exact.
+ * The UI reads this to grey out buttons without knowing the rules itself.
+ */
 export const caps = { tank: 1, damage: 2, support: 2 };
 
 /** Scarcity order: with fewer than 5 players the tank is filled first. */

@@ -18,6 +18,15 @@ test('every mode satisfies the contract index expects', () => {
     assert.equal(typeof mode.rules, 'string');
     assert.ok(mode.maxPlayers >= 1);
     assert.equal(typeof mode.assignRoles, 'function');
+    // caps is part of the contract: the UI greys out buttons from it.
+    for (const role of ROLES) {
+      assert.equal(typeof mode.caps[role], 'number', `${mode.key} is missing caps.${role}`);
+      assert.ok(mode.caps[role] >= 1 && mode.caps[role] <= mode.maxPlayers);
+    }
+    assert.ok(
+      Object.values(mode.caps).reduce((a, b) => a + b, 0) >= mode.maxPlayers,
+      `${mode.key} caps cannot fill a full team`,
+    );
     assert.equal(MODES[mode.key], mode);
     // assignRoles takes one slot per player and returns a real role for each.
     const roles = mode.assignRoles(Array(mode.maxPlayers).fill(null));

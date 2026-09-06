@@ -15,6 +15,13 @@ export const maxPlayers = 6;
 export const maxTanks = 2;
 
 /**
+ * Hard caps per role, the same shape Role Queue exposes, so the UI can grey out
+ * buttons without knowing either mode's rules. Damage and Support are uncapped;
+ * maxPlayers is the honest ceiling, since a team cannot hold more than that.
+ */
+export const caps = { tank: maxTanks, damage: maxPlayers, support: maxPlayers };
+
+/**
  * @param {(import('../shared.js').Role|null)[]} locked one entry per player; null = random
  * @returns {import('../shared.js').Role[]} one role per player, same order
  */

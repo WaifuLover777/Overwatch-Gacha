@@ -98,6 +98,7 @@ export function mountTeamPicker(container, modeKey) {
         const wasOn = btn.getAttribute('aria-pressed') === 'true';
         for (const other of picker.children) other.setAttribute('aria-pressed', 'false');
         btn.setAttribute('aria-pressed', String(!wasOn));
+        refreshRoleLimits();
         persist();
       });
       picker.append(btn);
@@ -130,6 +131,30 @@ export function mountTeamPicker(container, modeKey) {
     }));
 
   const persist = () => save(STORE_KEY, readPlayers());
+
+  /**
+   * Grey out the role buttons that would break the mode's caps, so an illegal
+   * comp cannot be built in the first place. Reads mode.caps rather than knowing
+   * the rules itself, so a new mode needs no change here.
+   *
+   * A pressed button always stays clickable — otherwise a lock could not be undone.
+   * Every row counts, named or not: a lock you can see is a slot that is taken.
+   */
+  function refreshRoleLimits() {
+    const used = { tank: 0, damage: 0, support: 0 };
+    for (const row of form.querySelectorAll('.player')) {
+      const role = row.querySelector('.role-pick[aria-pressed="true"]')?.dataset.role;
+      if (role) used[role]++;
+    }
+    for (const btn of form.querySelectorAll('.role-pick')) {
+      const role = btn.dataset.role;
+      const pressed = btn.getAttribute('aria-pressed') === 'true';
+      btn.disabled = !pressed && used[role] >= mode.caps[role];
+      btn.title = btn.disabled
+        ? `${mode.label} allows at most ${mode.caps[role]} ${ROLE_LABELS[role]}`
+        : `${ROLE_LABELS[role]} — click again for random`;
+    }
+  }
 
   const showError = (msg) => {
     errorBox.textContent = msg ?? '';
@@ -217,6 +242,9 @@ export function mountTeamPicker(container, modeKey) {
   form.addEventListener('submit', onSubmit);
   spinBtn.addEventListener('click', spin);
   addEventListener('keydown', onKey);
+
+  // Restored locks can already sit at a cap, so apply the limits before first paint.
+  refreshRoleLimits();
 
   // Without this, switching modes mid-spin leaves the interval running.
   return () => {
