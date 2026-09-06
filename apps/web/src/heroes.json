@@ -1,0 +1,267 @@
+[
+  {
+    "key": "ana",
+    "name": "Ana",
+    "role": "support"
+  },
+  {
+    "key": "anran",
+    "name": "Anran",
+    "role": "damage"
+  },
+  {
+    "key": "ashe",
+    "name": "Ashe",
+    "role": "damage"
+  },
+  {
+    "key": "baptiste",
+    "name": "Baptiste",
+    "role": "support"
+  },
+  {
+    "key": "bastion",
+    "name": "Bastion",
+    "role": "damage"
+  },
+  {
+    "key": "brigitte",
+    "name": "Brigitte",
+    "role": "support"
+  },
+  {
+    "key": "cassidy",
+    "name": "Cassidy",
+    "role": "damage"
+  },
+  {
+    "key": "dmon",
+    "name": "D.Mon",
+    "role": "tank"
+  },
+  {
+    "key": "dva",
+    "name": "D.Va",
+    "role": "tank"
+  },
+  {
+    "key": "domina",
+    "name": "Domina",
+    "role": "tank"
+  },
+  {
+    "key": "doomfist",
+    "name": "Doomfist",
+    "role": "tank"
+  },
+  {
+    "key": "echo",
+    "name": "Echo",
+    "role": "damage"
+  },
+  {
+    "key": "emre",
+    "name": "Emre",
+    "role": "damage"
+  },
+  {
+    "key": "freja",
+    "name": "Freja",
+    "role": "damage"
+  },
+  {
+    "key": "genji",
+    "name": "Genji",
+    "role": "damage"
+  },
+  {
+    "key": "hanzo",
+    "name": "Hanzo",
+    "role": "damage"
+  },
+  {
+    "key": "hazard",
+    "name": "Hazard",
+    "role": "tank"
+  },
+  {
+    "key": "illari",
+    "name": "Illari",
+    "role": "support"
+  },
+  {
+    "key": "jetpack-cat",
+    "name": "Jetpack Cat",
+    "role": "support"
+  },
+  {
+    "key": "junker-queen",
+    "name": "Junker Queen",
+    "role": "tank"
+  },
+  {
+    "key": "junkrat",
+    "name": "Junkrat",
+    "role": "damage"
+  },
+  {
+    "key": "juno",
+    "name": "Juno",
+    "role": "support"
+  },
+  {
+    "key": "kiriko",
+    "name": "Kiriko",
+    "role": "support"
+  },
+  {
+    "key": "lifeweaver",
+    "name": "Lifeweaver",
+    "role": "support"
+  },
+  {
+    "key": "lucio",
+    "name": "Lúcio",
+    "role": "support"
+  },
+  {
+    "key": "mauga",
+    "name": "Mauga",
+    "role": "tank"
+  },
+  {
+    "key": "mei",
+    "name": "Mei",
+    "role": "damage"
+  },
+  {
+    "key": "mercy",
+    "name": "Mercy",
+    "role": "support"
+  },
+  {
+    "key": "mizuki",
+    "name": "Mizuki",
+    "role": "support"
+  },
+  {
+    "key": "moira",
+    "name": "Moira",
+    "role": "support"
+  },
+  {
+    "key": "orisa",
+    "name": "Orisa",
+    "role": "tank"
+  },
+  {
+    "key": "pharah",
+    "name": "Pharah",
+    "role": "damage"
+  },
+  {
+    "key": "ramattra",
+    "name": "Ramattra",
+    "role": "tank"
+  },
+  {
+    "key": "reaper",
+    "name": "Reaper",
+    "role": "damage"
+  },
+  {
+    "key": "reinhardt",
+    "name": "Reinhardt",
+    "role": "tank"
+  },
+  {
+    "key": "roadhog",
+    "name": "Roadhog",
+    "role": "tank"
+  },
+  {
+    "key": "shion",
+    "name": "Shion",
+    "role": "damage"
+  },
+  {
+    "key": "sierra",
+    "name": "Sierra",
+    "role": "damage"
+  },
+  {
+    "key": "sigma",
+    "name": "Sigma",
+    "role": "tank"
+  },
+  {
+    "key": "sojourn",
+    "name": "Sojourn",
+    "role": "damage"
+  },
+  {
+    "key": "soldier-76",
+    "name": "Soldier: 76",
+    "role": "damage"
+  },
+  {
+    "key": "sombra",
+    "name": "Sombra",
+    "role": "damage"
+  },
+  {
+    "key": "symmetra",
+    "name": "Symmetra",
+    "role": "damage"
+  },
+  {
+    "key": "torbjorn",
+    "name": "Torbjörn",
+    "role": "damage"
+  },
+  {
+    "key": "tracer",
+    "name": "Tracer",
+    "role": "damage"
+  },
+  {
+    "key": "vendetta",
+    "name": "Vendetta",
+    "role": "damage"
+  },
+  {
+    "key": "venture",
+    "name": "Venture",
+    "role": "damage"
+  },
+  {
+    "key": "widowmaker",
+    "name": "Widowmaker",
+    "role": "damage"
+  },
+  {
+    "key": "winston",
+    "name": "Winston",
+    "role": "tank"
+  },
+  {
+    "key": "wrecking-ball",
+    "name": "Wrecking Ball",
+    "role": "tank"
+  },
+  {
+    "key": "wuyang",
+    "name": "Wuyang",
+    "role": "support"
+  },
+  {
+    "key": "zarya",
+    "name": "Zarya",
+    "role": "tank"
+  },
+  {
+    "key": "zenyatta",
+    "name": "Zenyatta",
+    "role": "support"
+  }
+]

@@ -1,0 +1,3 @@
+# Repo en LF: sin esto Windows mete CRLF y los diffs salen del archivo entero.
+* text=auto eol=lf
+*.webp binary

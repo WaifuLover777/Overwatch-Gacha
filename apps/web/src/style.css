@@ -1,0 +1,301 @@
+:root {
+  --bg: #0b1118;
+  --panel: #141d28;
+  --line: #26333f;
+  --text: #e9eef4;
+  --dim: #8b9bab;
+  --orange: #f99e1a;
+  --tank: #4a7fd4;
+  --damage: #e0574a;
+  --support: #3fae6d;
+  color-scheme: dark;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: radial-gradient(900px 500px at 50% -10%, #1b2836, var(--bg));
+  color: var(--text);
+  font: 16px/1.5 "Segoe UI", system-ui, -apple-system, sans-serif;
+}
+
+.app {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 40px 20px 80px;
+}
+
+/* ---------- cabecera ---------- */
+
+.head {
+  text-align: center;
+  margin-bottom: 32px;
+}
+
+.head h1 {
+  margin: 0;
+  font-size: clamp(28px, 6vw, 48px);
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+
+.head h1 em {
+  color: var(--orange);
+  font-style: normal;
+}
+
+.head p {
+  margin: 8px 0 0;
+  color: var(--dim);
+  font-size: 14px;
+}
+
+/* ---------- selector de modo ---------- */
+
+.modes {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.mode {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--panel);
+  color: var(--dim);
+  font: inherit;
+  font-weight: 700;
+  text-align: center;
+  text-decoration: none;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s, background 0.15s;
+}
+
+.mode:focus-visible {
+  outline: 2px solid var(--orange);
+  outline-offset: 2px;
+}
+
+.mode small {
+  font-weight: 400;
+  font-size: 12px;
+  opacity: 0.8;
+}
+
+.mode:hover {
+  border-color: #3a4b5c;
+}
+
+.mode[aria-current="page"] {
+  border-color: var(--orange);
+  background: #1d2635;
+  color: var(--text);
+}
+
+/* Las reglas del modo activo, escritas por su módulo en packages/gacha/modes. */
+.hint {
+  margin: 0 0 16px;
+  padding: 10px 14px;
+  border-left: 3px solid var(--orange);
+  border-radius: 0 8px 8px 0;
+  background: #16202c;
+  color: var(--dim);
+  font-size: 13px;
+}
+
+/* ---------- jugadores ---------- */
+
+.players {
+  display: grid;
+  /* Un campo de 900px para escribir "Ana" es absurdo: en ancho se reparte en columnas. */
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.players label {
+  display: grid;
+  grid-template-columns: 28px 1fr;
+  align-items: center;
+  gap: 10px;
+}
+
+.players span {
+  color: var(--dim);
+  font-size: 13px;
+  text-align: center;
+}
+
+.players input {
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel);
+  color: var(--text);
+  font: inherit;
+}
+
+.players input:focus-visible {
+  outline: 2px solid var(--orange);
+  outline-offset: 1px;
+}
+
+/* ---------- botón ---------- */
+
+.spin {
+  width: 100%;
+  padding: 18px;
+  border: 0;
+  border-radius: 10px;
+  background: linear-gradient(180deg, #ffb43f, var(--orange));
+  color: #241704;
+  font: inherit;
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: 0.15em;
+  cursor: pointer;
+}
+
+.spin:hover:not(:disabled) {
+  filter: brightness(1.1);
+}
+
+.spin:disabled {
+  opacity: 0.5;
+  cursor: wait;
+}
+
+.error {
+  margin: 14px 0 0;
+  padding: 12px 14px;
+  border: 1px solid #7b3030;
+  border-radius: 8px;
+  background: #2a1618;
+  color: #ffb3ab;
+  font-size: 14px;
+}
+
+/* ---------- resultados ---------- */
+
+.results {
+  display: grid;
+  /* 110px es el mínimo que deja caber los 6 de Open Queue en una fila a partir de
+     tablet (con 150px salían 5 + 1 huérfana) y 2 por fila en móvil. */
+  grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+  gap: 12px;
+  margin: 28px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.card {
+  --role: var(--line); /* hasta que se revela el rol */
+  display: flex;
+  flex-direction: column;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-top: 3px solid var(--role);
+  border-radius: 10px;
+  background: var(--panel);
+  text-align: center;
+}
+
+.card[data-role="tank"] {
+  --role: var(--tank);
+}
+.card[data-role="damage"] {
+  --role: var(--damage);
+}
+.card[data-role="support"] {
+  --role: var(--support);
+}
+
+.card img {
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: cover;
+  border-radius: 8px;
+  background: #0d141c;
+}
+
+.card .who {
+  margin-top: 10px;
+  color: var(--dim);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  overflow-wrap: anywhere;
+}
+
+.card .hero {
+  font-size: 17px;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+/* Al pie de la carta: si un nombre ocupa dos líneas, los badges siguen alineados. */
+.card .role-row {
+  margin-top: auto;
+  padding-top: 8px;
+}
+
+.card .role {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 99px;
+  background: var(--role);
+  color: #0b1118;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+/* Mientras gira: el rol aún no se conoce, se atenúa todo menos el retrato. */
+.card.spinning img {
+  animation: shake 0.28s linear infinite;
+}
+
+.card.spinning .hero,
+.card.spinning .role {
+  opacity: 0.35;
+}
+
+.card.landed {
+  animation: land 0.45s cubic-bezier(0.2, 1.4, 0.4, 1);
+}
+
+@keyframes shake {
+  50% {
+    transform: translateY(-3px) scale(0.98);
+  }
+}
+
+@keyframes land {
+  0% {
+    transform: scale(0.85);
+    box-shadow: 0 0 0 0 var(--role);
+  }
+  60% {
+    transform: scale(1.06);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 22px -6px var(--role);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card.spinning img,
+  .card.landed {
+    animation: none;
+  }
+}

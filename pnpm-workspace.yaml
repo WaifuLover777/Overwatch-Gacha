@@ -1,0 +1,7 @@
+packages:
+  - apps/*
+  - packages/*
+# esbuild (Vite) y workerd (Wrangler) descargan su binario nativo en el postinstall.
+allowBuilds:
+  esbuild: true
+  workerd: true

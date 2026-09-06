@@ -1,0 +1,13 @@
+node_modules/
+dist/
+.wrangler/
+.dev.vars
+*.log
+.DS_Store
+
+# Solo se publica la versión estática. El esqueleto de la API se queda en local
+# hasta que tenga algo dentro; para incluirlo, borra estas dos líneas.
+apps/api/
+.github/workflows/deploy-api.yml
+
+# Los retratos y heroes.json SÍ se commitean: la app los sirve desde su propio origen.

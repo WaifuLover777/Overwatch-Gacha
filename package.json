@@ -1,0 +1,17 @@
+{
+  "name": "ow-gacha",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "pnpm --filter web dev",
+    "build": "pnpm --filter web build",
+    "preview": "pnpm --filter web preview",
+    "fetch-heroes": "pnpm --filter web fetch-heroes",
+    "test": "node --test --test-reporter=spec \"packages/**/*.test.js\""
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "packageManager": "pnpm@11.10.0"
+}

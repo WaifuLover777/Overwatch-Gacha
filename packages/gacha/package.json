@@ -1,0 +1,14 @@
+{
+  "name": "@ow-gacha/gacha",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "index.js",
+  "exports": {
+    ".": "./index.js",
+    "./modes/*": "./modes/*.js"
+  },
+  "scripts": {
+    "test": "node --test"
+  }
+}
