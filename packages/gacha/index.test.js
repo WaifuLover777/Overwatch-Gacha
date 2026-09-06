@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { MODES, MODE_LIST, ROLES, draw, getMode } from './index.js';
+import { MODES, MODE_LIST, ROLES, canAssign, draw, getMode } from './index.js';
 
 /** Synthetic roster: enough of every role to never hit the hero limit. */
 const heroes = ROLES.flatMap((role) =>
@@ -18,6 +18,7 @@ test('every mode satisfies the contract index expects', () => {
     assert.equal(typeof mode.rules, 'string');
     assert.ok(mode.maxPlayers >= 1);
     assert.equal(typeof mode.assignRoles, 'function');
+    assert.equal(typeof mode.canAssign, 'function');
     // caps is part of the contract: the UI greys out buttons from it.
     for (const role of ROLES) {
       assert.equal(typeof mode.caps[role], 'number', `${mode.key} is missing caps.${role}`);
@@ -73,10 +74,33 @@ test('a player can be a bare string or an object with a locked role', () => {
   }
 });
 
-test('picks report whether the role was locked or rolled', () => {
-  const picks = draw([{ name: 'Ana', role: 'tank' }, 'Luis'], 'open', heroes);
-  assert.equal(picks[0].locked, true);
-  assert.equal(picks[1].locked, false);
+test('picks report a lock only when a single role was accepted', () => {
+  const picks = draw(
+    [{ name: 'Ana', role: 'tank' }, 'Luis', { name: 'Bea', roles: ['damage', 'support'] }],
+    'open',
+    heroes,
+  );
+  assert.equal(picks[0].locked, true, 'one accepted role is a real lock');
+  assert.equal(picks[1].locked, false, 'no preference is not a lock');
+  assert.equal(picks[2].locked, false, 'two accepted roles still leave the roulette a choice');
+});
+
+test('roles accepts a list, and the pick always comes from it', () => {
+  for (let i = 0; i < N; i++) {
+    const picks = draw(
+      [{ name: 'Ana', roles: ['tank', 'support'] }, 'Luis', 'Bea', 'Dani', 'Eva'],
+      'role-queue',
+      heroes,
+    );
+    assert.ok(['tank', 'support'].includes(picks[0].role));
+    assert.equal(picks[0].hero.role, picks[0].role);
+  }
+});
+
+test('canAssign is reachable from the index too', () => {
+  assert.equal(canAssign([['tank'], null, null, null, null], 'role-queue'), true);
+  assert.equal(canAssign([['tank'], ['tank'], null, null, null], 'role-queue'), false);
+  assert.equal(canAssign([['tank'], ['tank'], null, null, null, null], 'open'), true);
 });
 
 test('an object with no role behaves like a bare name', () => {
@@ -88,7 +112,7 @@ test('an object with no role behaves like a bare name', () => {
 test('impossible locks bubble up from the mode', () => {
   assert.throws(
     () => draw([{ name: 'a', role: 'tank' }, { name: 'b', role: 'tank' }, 'c'], 'role-queue', heroes),
-    /at most 1 Tank, but 2/,
+    /locked to Tank: 2 chosen, 1 allowed/,
   );
   assert.throws(
     () =>
@@ -102,7 +126,7 @@ test('impossible locks bubble up from the mode', () => {
         'open',
         heroes,
       ),
-    /at most 2 Tanks, but 3/,
+    /locked to Tank: 3 chosen, 2 allowed/,
   );
 });
 

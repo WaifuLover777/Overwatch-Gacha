@@ -14,15 +14,26 @@ With fewer players, Role Queue fills in scarcity order — the tank first.
 > Open Queue sets no minimum on tanks, so a draw can come up with 0.
 > That is the actual rule of the game.
 
-## Locking a role
+## Picking roles
 
-Each player row has three buttons — Tank, Damage, Support. Press one and that player is
-**locked** to that role; the roulette only picks their hero. Press it again to go back to
-random. Leave every button off and the whole team is rolled.
+Each player row has four buttons: a die plus Tank, Damage and Support.
 
-Locks are checked against the mode's rules before anything spins, so two locked tanks in
-Role Queue is a clear error rather than a broken draw. Locked results carry an outlined
-`LOCKED` badge, so nobody mistakes a choice for a roll.
+Mark **the roles that player is willing to take** — one, two, or all three. The roulette
+then picks among them. Marking none (the die) means any role, which is the default. So a
+flex player can say "tank or support, I don't mind" and still get a real roll; a one-trick
+can pin a single role and only their hero is rolled.
+
+Because roles interact, the buttons are checked against the whole team, not against a
+counter. A toggle greys out only when pressing it would leave **no legal team at all**: if
+four players refuse to tank, the fifth cannot drop tank either. The die is never disabled,
+so there is always a way back out of a dead end.
+
+Under the hood that is a small assignment problem. With at most 6 players and 3 roles
+there are at most 3⁶ = 729 combinations, so `packages/gacha` enumerates the legal ones and
+picks uniformly — exact, unbiased, and it never gets stuck the way a greedy fill does.
+
+A result is badged `LOCKED` only when that player accepted exactly one role. With two, the
+roulette still chose, so it is shown as a normal roll.
 
 ## Structure
 

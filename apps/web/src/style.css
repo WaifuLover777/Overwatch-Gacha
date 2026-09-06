@@ -136,7 +136,7 @@ body {
 }
 
 .player input {
-  min-width: 0;
+  min-width: 90px;
   padding: 12px 14px;
   border: 1px solid var(--line);
   border-radius: 8px;
@@ -154,14 +154,14 @@ body {
 
 .roles {
   display: flex;
-  gap: 4px;
+  gap: 3px;
 }
 
 .role-pick {
   display: grid;
   place-items: center;
-  width: 34px;
-  height: 34px;
+  width: 32px;
+  height: 32px;
   padding: 0;
   border: 1px solid var(--line);
   border-radius: 8px;
@@ -172,8 +172,14 @@ body {
 }
 
 .role-pick svg {
-  width: 18px;
-  height: 18px;
+  width: 17px;
+  height: 17px;
+}
+
+/* "Any role" sits apart: it is the escape hatch, not a fourth role. */
+.role-pick.is-any {
+  --pick: var(--orange);
+  margin-right: 4px;
 }
 
 .role-pick[data-role="tank"] {
@@ -196,14 +202,15 @@ body {
   outline-offset: 1px;
 }
 
-/* Pressed = the player locked this role; unpressed on all three = random. */
+/* Pressed = the player accepts this role. One, two or all three may be on;
+   none on means any role, which lights up the dice instead. */
 .role-pick[aria-pressed="true"] {
   color: #0b1118;
   border-color: var(--pick);
   background: var(--pick);
 }
 
-/* The mode's cap for this role is already taken by other players. */
+/* Accepting (or dropping) this role would leave no legal team. */
 .role-pick:disabled {
   opacity: 0.28;
   cursor: not-allowed;

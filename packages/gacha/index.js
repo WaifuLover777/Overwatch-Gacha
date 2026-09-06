@@ -26,28 +26,34 @@ export function getMode(key) {
 }
 
 /**
- * A player is either a bare name or a name with a locked role.
- * Blank names are dropped; anything that is not a real role becomes "no preference".
- * @param {(string | {name?: string, role?: string|null})[]} players
+ * A player is a bare name, or a name with the roles they accept. `roles` may
+ * hold 1, 2 or all 3; empty or absent means any role, which is the random case.
+ * `role` (singular) is still accepted as shorthand for a single-role list.
+ * Blank names are dropped.
+ *
+ * @param {(string | {name?: string, role?: string|null, roles?: string[]})[]} players
  * @param {number} max
  * @returns {import('./shared.js').Entry[]}
  */
 function normalizePlayers(players, max) {
   return (players ?? [])
-    .map((p) => (typeof p === 'string' ? { name: p, role: null } : { name: p?.name, role: p?.role }))
-    .map((e) => ({
-      name: String(e.name ?? '').trim(),
-      role: ROLES.includes(e.role) ? e.role : null,
-    }))
+    .map((p) => (typeof p === 'string' ? { name: p } : p ?? {}))
+    .map((p) => {
+      const list = Array.isArray(p.roles) ? p.roles : p.role != null ? [p.role] : [];
+      return {
+        name: String(p.name ?? '').trim(),
+        roles: [...new Set(list.filter((r) => ROLES.includes(r)))],
+      };
+    })
     .filter((e) => e.name)
     .slice(0, max);
 }
 
 /**
  * Deals a different hero to each player, following the mode's rules.
- * Players who locked a role keep it; the rest are filled at random.
+ * Each player gets one of the roles they accept; the mode decides which.
  *
- * @param {(string | {name?: string, role?: string|null})[]} players
+ * @param {(string | {name?: string, role?: string|null, roles?: string[]})[]} players
  * @param {string} modeKey
  * @param {import('./shared.js').Hero[]} heroes full roster
  * @returns {import('./shared.js').Pick[]}
@@ -58,7 +64,7 @@ export function draw(players, modeKey, heroes) {
   const entries = normalizePlayers(players, mode.maxPlayers);
   if (entries.length === 0) throw new Error('Add at least one player.');
 
-  const roles = mode.assignRoles(entries.map((e) => e.role));
+  const roles = mode.assignRoles(entries.map((e) => e.roles));
 
   const pool = { tank: [], damage: [], support: [] };
   for (const h of heroes ?? []) if (pool[h?.role]) pool[h.role].push(h);
@@ -78,6 +84,16 @@ export function draw(players, modeKey, heroes) {
     player: entry.name,
     role: roles[i],
     hero: pool[roles[i]].pop(),
-    locked: entry.role !== null,
+    // Only a single accepted role is a real lock. With 2 the roulette still chose.
+    locked: entry.roles.length === 1,
   }));
 }
+
+/**
+ * Could these accepted-role sets produce a legal team? The UI asks before
+ * offering a button, so an impossible pick is never clickable.
+ *
+ * @param {(string | string[] | null)[]} allowed one entry per player
+ * @param {string} modeKey
+ */
+export const canAssign = (allowed, modeKey) => getMode(modeKey).canAssign(allowed);
