@@ -1,3 +1,3 @@
-# Repo en LF: sin esto Windows mete CRLF y los diffs salen del archivo entero.
+# LF repo: without this Windows introduces CRLF and diffs cover whole files.
 * text=auto eol=lf
 *.webp binary

@@ -1,32 +1,41 @@
 /**
- * Open Queue (6v6): máximo 2 Tanks, Damage y Support sin límite.
- * Módulo autónomo — no sabe nada de Role Queue.
+ * Open Queue (6v6): at most 2 Tanks, Damage and Support uncapped.
+ * Self-contained module — it knows nothing about Role Queue.
  */
-import { ROLES, pick, shuffle } from '../shared.js';
+import { ROLES, countBy, normalizeLocked, pick, shuffle } from '../shared.js';
 
 export const key = 'open';
 export const label = 'Open Queue';
-export const summary = '6 jugadores · máx. 2 tanks';
+export const summary = '6 players · max 2 tanks';
 export const rules =
-  'Máximo 2 Tanks; Damage y Support sin límite, y sin héroes repetidos. ' +
-  'El juego no exige un mínimo de tanks, así que puede salir una comp con 0.';
+  'At most 2 Tanks; Damage and Support are uncapped, and no duplicate heroes. ' +
+  'The game sets no minimum on tanks, so a comp with 0 can come up. ' +
+  'Lock a role on a player to force it; leave it unset and the roulette decides.';
 export const maxPlayers = 6;
 export const maxTanks = 2;
 
 /**
- * @param {number} playerCount
- * @returns {import('../shared.js').Role[]}
+ * @param {(import('../shared.js').Role|null)[]} locked one entry per player; null = random
+ * @returns {import('../shared.js').Role[]} one role per player, same order
  */
-export function assignRoles(playerCount) {
-  const n = Math.min(Math.max(0, playerCount), maxPlayers);
-  const roles = [];
-  let tanks = 0;
-  for (let i = 0; i < n; i++) {
+export function assignRoles(locked = []) {
+  const slots = normalizeLocked(locked);
+  let tanks = countBy(slots).tank;
+
+  if (tanks > maxTanks) {
+    throw new Error(`Open Queue allows at most ${maxTanks} Tanks, but ${tanks} were locked.`);
+  }
+
+  const need = slots.filter((r) => !r).length;
+  const free = [];
+  for (let i = 0; i < need; i++) {
     const allowed = tanks < maxTanks ? ROLES : ROLES.filter((r) => r !== 'tank');
     const role = pick(allowed);
     if (role === 'tank') tanks++;
-    roles.push(role);
+    free.push(role);
   }
-  // Los primeros huecos tienen más probabilidad de tank; barajar iguala a los jugadores.
-  return shuffle(roles);
+
+  // Earlier draws are likelier to be tanks; shuffling levels it across players.
+  const bag = shuffle(free);
+  return slots.map((r) => r ?? bag.pop());
 }

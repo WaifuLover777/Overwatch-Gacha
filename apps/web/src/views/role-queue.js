@@ -1,4 +1,4 @@
-/** Vista de Role Queue. Su propia URL, su propia lista de nombres guardada. */
+/** Role Queue view. Its own URL, its own saved player list. */
 import { MODES } from '@ow-gacha/gacha';
 import { mountTeamPicker } from '../team-picker.js';
 

@@ -1,4 +1,4 @@
-/** Vista de Open Queue. Su propia URL, su propia lista de nombres guardada. */
+/** Open Queue view. Its own URL, its own saved player list. */
 import { MODES } from '@ow-gacha/gacha';
 import { mountTeamPicker } from '../team-picker.js';
 

@@ -29,7 +29,7 @@ body {
   padding: 40px 20px 80px;
 }
 
-/* ---------- cabecera ---------- */
+/* ---------- header ---------- */
 
 .head {
   text-align: center;
@@ -54,7 +54,7 @@ body {
   font-size: 14px;
 }
 
-/* ---------- selector de modo ---------- */
+/* ---------- mode nav ---------- */
 
 .modes {
   display: grid;
@@ -101,7 +101,7 @@ body {
   color: var(--text);
 }
 
-/* Las reglas del modo activo, escritas por su módulo en packages/gacha/modes. */
+/* The active mode's rules, written by its module in packages/gacha/modes. */
 .hint {
   margin: 0 0 16px;
   padding: 10px 14px;
@@ -112,30 +112,31 @@ body {
   font-size: 13px;
 }
 
-/* ---------- jugadores ---------- */
+/* ---------- players ---------- */
 
 .players {
   display: grid;
-  /* Un campo de 900px para escribir "Ana" es absurdo: en ancho se reparte en columnas. */
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  /* A 900px-wide field to type "Ana" is absurd: it splits into columns when there is room. */
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
   gap: 8px;
   margin-bottom: 20px;
 }
 
-.players label {
+.player {
   display: grid;
-  grid-template-columns: 28px 1fr;
+  grid-template-columns: 20px 1fr auto;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
 }
 
-.players span {
+.player .num {
   color: var(--dim);
   font-size: 13px;
   text-align: center;
 }
 
-.players input {
+.player input {
+  min-width: 0;
   padding: 12px 14px;
   border: 1px solid var(--line);
   border-radius: 8px;
@@ -144,12 +145,65 @@ body {
   font: inherit;
 }
 
-.players input:focus-visible {
+.player input:focus-visible {
   outline: 2px solid var(--orange);
   outline-offset: 1px;
 }
 
-/* ---------- botón ---------- */
+/* ---------- role lock ---------- */
+
+.roles {
+  display: flex;
+  gap: 4px;
+}
+
+.role-pick {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel);
+  color: var(--dim);
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s, background 0.15s;
+}
+
+.role-pick svg {
+  width: 18px;
+  height: 18px;
+}
+
+.role-pick[data-role="tank"] {
+  --pick: var(--tank);
+}
+.role-pick[data-role="damage"] {
+  --pick: var(--damage);
+}
+.role-pick[data-role="support"] {
+  --pick: var(--support);
+}
+
+.role-pick:hover {
+  color: var(--pick);
+  border-color: var(--pick);
+}
+
+.role-pick:focus-visible {
+  outline: 2px solid var(--orange);
+  outline-offset: 1px;
+}
+
+/* Pressed = the player locked this role; unpressed on all three = random. */
+.role-pick[aria-pressed="true"] {
+  color: #0b1118;
+  border-color: var(--pick);
+  background: var(--pick);
+}
+
+/* ---------- button ---------- */
 
 .spin {
   width: 100%;
@@ -184,12 +238,12 @@ body {
   font-size: 14px;
 }
 
-/* ---------- resultados ---------- */
+/* ---------- results ---------- */
 
 .results {
   display: grid;
-  /* 110px es el mínimo que deja caber los 6 de Open Queue en una fila a partir de
-     tablet (con 150px salían 5 + 1 huérfana) y 2 por fila en móvil. */
+  /* 110px is the smallest min that fits all 6 of Open Queue on one row from
+     tablet up (150px left 5 + 1 orphan) and 2 per row on phones. */
   grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
   gap: 12px;
   margin: 28px 0 0;
@@ -198,7 +252,7 @@ body {
 }
 
 .card {
-  --role: var(--line); /* hasta que se revela el rol */
+  --role: var(--line); /* until the role is revealed */
   display: flex;
   flex-direction: column;
   padding: 12px;
@@ -242,7 +296,7 @@ body {
   overflow-wrap: anywhere;
 }
 
-/* Al pie de la carta: si un nombre ocupa dos líneas, los badges siguen alineados. */
+/* Pinned to the bottom: badges stay aligned when a hero name wraps to two lines. */
 .card .role-row {
   margin-top: auto;
   padding-top: 8px;
@@ -259,7 +313,20 @@ body {
   text-transform: uppercase;
 }
 
-/* Mientras gira: el rol aún no se conoce, se atenúa todo menos el retrato. */
+/* Chosen by the player, not rolled: outlined instead of filled, so the
+   result never claims the roulette picked it. */
+.card .role.is-locked {
+  background: transparent;
+  border: 1px solid var(--role);
+  color: var(--role);
+}
+
+.card .role.is-locked::after {
+  content: " \00b7 locked";
+  opacity: 0.75;
+}
+
+/* While spinning the role is unknown, so everything but the portrait dims. */
 .card.spinning img {
   animation: shake 0.28s linear infinite;
 }

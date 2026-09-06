@@ -5,9 +5,9 @@ dist/
 *.log
 .DS_Store
 
-# Solo se publica la versión estática. El esqueleto de la API se queda en local
-# hasta que tenga algo dentro; para incluirlo, borra estas dos líneas.
+# Only the static app is published. The API skeleton stays local until it has
+# something in it; to include it, delete these two lines.
 apps/api/
 .github/workflows/deploy-api.yml
 
-# Los retratos y heroes.json SÍ se commitean: la app los sirve desde su propio origen.
+# Portraits and heroes.json ARE committed: the app serves them from its own origin.

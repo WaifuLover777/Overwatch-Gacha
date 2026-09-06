@@ -21,12 +21,12 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
 ---------------------------------------------------------------------------
-EXCEPCIÓN: los retratos de héroes NO están cubiertos por esta licencia.
+EXCEPTION: the hero portraits are NOT covered by this license.
 
-Los archivos de apps/web/public/heroes/ son obra de Blizzard Entertainment,
-Inc. y siguen siendo suyos. Se incluyen aquí como contenido de fans, con uso
-estrictamente no comercial. No se sublicencian ni se ceden bajo MIT: si
-reutilizas este proyecto, esa restricción viaja con esos archivos.
+The files in apps/web/public/heroes/ are the work of Blizzard Entertainment,
+Inc. and remain theirs. They are included here as fan content, for strictly
+non-commercial use. They are not sublicensed or granted under MIT: if you
+reuse this project, that restriction travels with those files.
 
-La licencia MIT de arriba cubre el código, la configuración y la documentación.
+The MIT license above covers the code, the configuration and the docs.
 ---------------------------------------------------------------------------

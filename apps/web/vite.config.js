@@ -1,7 +1,7 @@
 import { defineConfig } from 'vite';
 
 export default defineConfig({
-  // Rutas relativas: el mismo dist/ sirve en usuario.github.io/repo/ y en la raíz,
-  // sin tener que hardcodear el nombre del repo. (Sobre file:// no funciona: CORS.)
+  // Relative paths: the same dist/ works at usuario.github.io/repo/ and at the
+  // root, with no repo name hardcoded. (It does not work over file://: CORS.)
   base: './',
 });

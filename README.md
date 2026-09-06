@@ -1,108 +1,115 @@
 # OW Gacha
 
-Ruleta de héroes de Overwatch para streams y partidas con amigos: metes los nombres,
-le das a GACHA y a cada uno le toca un héroe — **respetando las reglas reales de
-composición del juego**.
+Hero roulette for Overwatch streams and friend groups: type the names, hit GACHA,
+and everyone gets a hero — **following the game's real composition rules**.
 
-| Modo | Jugadores | Restricción |
+| Mode | Players | Constraint |
 |---|---|---|
-| **Role Queue** | 5 | exactamente 1 Tank / 2 Damage / 2 Support |
-| **Open Queue** (6v6) | 6 | máximo 2 Tanks; Damage y Support sin límite |
+| **Role Queue** | 5 | exactly 1 Tank / 2 Damage / 2 Support |
+| **Open Queue** (6v6) | 6 | at most 2 Tanks; Damage and Support uncapped |
 
-En ambos, sin héroes repetidos en el equipo (hero limit del juego).
-Con menos jugadores, Role Queue reparte en orden de escasez (el tank primero).
+No duplicate heroes in either mode (the game's hero limit).
+With fewer players, Role Queue fills in scarcity order — the tank first.
 
-> Open Queue no exige mínimo de tanks, así que una tirada puede salir con 0.
-> Es la regla real del juego.
+> Open Queue sets no minimum on tanks, so a draw can come up with 0.
+> That is the actual rule of the game.
 
-## Estructura
+## Locking a role
 
-Monorepo con dos proyectos independientes: comparten `git log` y la lógica de sorteo,
-nada más. Cada uno tiene su deploy filtrado por `paths:`, así tocar uno no redespliega
-el otro.
+Each player row has three buttons — Tank, Damage, Support. Press one and that player is
+**locked** to that role; the roulette only picks their hero. Press it again to go back to
+random. Leave every button off and the whole team is rolled.
+
+Locks are checked against the mode's rules before anything spins, so two locked tanks in
+Role Queue is a clear error rather than a broken draw. Locked results carry an outlined
+`LOCKED` badge, so nobody mistakes a choice for a roll.
+
+## Structure
+
+A monorepo with two independent projects: they share a `git log` and the draw logic,
+nothing else. Each has its own deploy filtered by `paths:`, so touching one does not
+redeploy the other.
 
 ```
-packages/gacha/           lógica de sorteo   ← lo único compartido
-  shared.js               roles, shuffle
-  modes/role-queue.js     reglas de Role Queue  + sus tests
-  modes/open.js           reglas de Open Queue  + sus tests
-  index.js                registro de modos y reparto de héroes
+packages/gacha/           draw logic   <- the only shared piece
+  shared.js               roles, shuffle, helpers
+  modes/role-queue.js     Role Queue rules  + its tests
+  modes/open.js           Open Queue rules  + its tests
+  index.js                mode registry and hero dealing
 
-apps/web/                 la app             → GitHub Pages
-  src/views/role-queue.js  \  una vista por modo, cada una con su URL
+apps/web/                 the app      -> GitHub Pages
+  src/views/role-queue.js  \  one view per mode, each with its own URL
   src/views/open.js        /
-  src/team-picker.js      el widget que ambas montan con su modo
-  src/main.js             router por hash
+  src/team-picker.js      the widget both views mount with their mode
+  src/main.js             hash router
 
-apps/api/                 esqueleto, sin features → Cloudflare Workers
+apps/api/                 skeleton, no features -> Cloudflare Workers
 ```
 
-**Cada modo es un módulo independiente.** `modes/role-queue.js` y `modes/open.js` no
-se conocen entre sí: cada uno declara su `maxPlayers`, sus reglas y su `assignRoles`.
-`index.js` solo los registra y reparte los héroes sin repetir. Añadir un modo nuevo
-(Stadium, Mystery Heroes…) es crear un archivo en `modes/`, registrarlo en `index.js`
-y añadir su vista.
+**Each mode is an independent module.** `modes/role-queue.js` and `modes/open.js` know
+nothing about each other: each declares its own `maxPlayers`, its rules and its
+`assignRoles`. `index.js` only registers them and deals heroes without repeats. Adding a
+new mode (Stadium, Mystery Heroes…) means one file in `modes/`, one line in `index.js`,
+and its view.
 
-Cada modo es también su propia pantalla, con URL propia:
+Each mode is also its own screen, with its own URL:
 
-| Ruta | Modo |
+| Route | Mode |
 |---|---|
-| `#/role-queue` | Role Queue (por defecto) |
+| `#/role-queue` | Role Queue (default) |
 | `#/open` | Open Queue |
 
-Los nombres de jugador se guardan por separado en cada modo, así no se pisan.
-Para OBS puedes apuntar el Browser Source directamente a `…/#/open` y arranca en
-ese modo.
+Player names and role locks are stored separately per mode, so they never clobber each
+other. For OBS, point the Browser Source straight at `…/#/open` and it starts in that mode.
 
-La app publicada **no hace ninguna petición fuera de su propio origen** (verificado: 56
-peticiones, 0 externas). El roster y los 53 retratos van commiteados, así que no depende
-de la API de OverFast ni del CDN de Blizzard: si cualquiera de los dos se cae, la ruleta
-sigue funcionando.
+The published app **makes no request outside its own origin** (verified: 56 requests, 0
+external). The roster and all 53 portraits are committed, so it depends on neither the
+OverFast API nor Blizzard's CDN: if either goes down, the roulette keeps working.
 
-Eso no es lo mismo que funcionar sin internet. La página se carga desde GitHub Pages como
-cualquier otra, y **no funciona abriendo `dist/index.html` a pelo**: Chrome bloquea los
-módulos ES sobre `file://` por CORS. Para usarla en local hace falta servirla
+That is not the same as working without internet. The page loads from GitHub Pages like
+any other, and **it does not work by opening `dist/index.html` directly**: Chrome blocks
+ES modules over `file://` because of CORS. To run it locally you need to serve it
 (`pnpm preview`).
 
-## Requisitos
+## Requirements
 
-Node 20+ (probado en 22) · pnpm 9+
+Node 20+ (tested on 22) · pnpm 9+
 
-## Uso
+## Usage
 
 ```bash
 pnpm install
-pnpm fetch-heroes    # solo la primera vez, o cuando salga héroe nuevo
+pnpm fetch-heroes    # first time only, or when a new hero ships
 pnpm dev             # http://localhost:5173
-pnpm test            # reglas de sorteo
+pnpm test            # draw rules
 pnpm build
 ```
 
-`pnpm fetch-heroes` baja el roster de [OverFast API](https://overfast-api.tekrop.fr)
-y los retratos oficiales a `apps/web/public/heroes/`. Es idempotente; `--force` los
-vuelve a bajar. Si Blizzard saca un héroe y OverFast tarda en indexarlo, hay un array
-`EXTRA_HEROES` al principio del script para meterlo a mano.
+`pnpm fetch-heroes` pulls the roster from [OverFast API](https://overfast-api.tekrop.fr)
+and the official portraits into `apps/web/public/heroes/`, converting them to WebP
+(190 KB PNG → 18 KB each). It is idempotent; `--force` re-downloads. If Blizzard ships a
+hero and OverFast is slow to index it, there is an `EXTRA_HEROES` array at the top of the
+script to add it by hand.
 
-## Publicar
+## Publishing
 
-1. `git init && gh repo create`, push a `main`.
+1. `git init && gh repo create`, push to `main`.
 2. Settings → Pages → **Source: GitHub Actions**.
 
-El workflow `deploy-web` corre los tests antes de desplegar. `deploy-api` está
-desactivado (solo manual) hasta que la API tenga algo dentro — ver
-[apps/api/README.md](apps/api/README.md).
+The `deploy-web` workflow runs the tests before deploying. `deploy-api` is disabled
+(manual only) until the API has something in it — see [apps/api/README.md](apps/api/README.md).
 
-## Licencia
+## License
 
-El **código** está bajo [MIT](LICENSE).
+The **code** is [MIT](LICENSE).
 
-Los **retratos de héroes** de `apps/web/public/heroes/` no lo están: son obra de Blizzard
-Entertainment y siguen siendo suyos. Se incluyen como contenido de fans y su uso aquí es
-estrictamente **no comercial** — sin anuncios, sin venta, sin donaciones atadas al proyecto.
-Si reutilizas el repo, esa restricción viaja con esos archivos.
+The **hero portraits** in `apps/web/public/heroes/` are not: they are Blizzard
+Entertainment's work and remain theirs. They are included as fan content and their use
+here is strictly **non-commercial** — no ads, no sales, no donations tied to the project.
+If you reuse this repo, that restriction travels with those files.
 
 ---
 
-Idea original: [@hatunemiku_7855](https://x.com/hatunemiku_7855/status/2096537727428710786).
-Overwatch es marca registrada de Blizzard Entertainment; este es un proyecto de fans sin
-afiliación ni respaldo de Blizzard.
+Original idea: [@hatunemiku_7855](https://x.com/hatunemiku_7855/status/2096537727428710786).
+Overwatch is a trademark of Blizzard Entertainment; this is a fan project with no
+affiliation with or endorsement by Blizzard.

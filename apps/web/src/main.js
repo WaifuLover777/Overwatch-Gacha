@@ -1,7 +1,6 @@
 /**
- * Router por hash. Cada modo es una vista con su propia URL, así el Browser
- * Source de OBS puede apuntar directo a un modo (…/#/open) y el botón atrás
- * del navegador funciona.
+ * Hash router. Each mode is a view with its own URL, so an OBS Browser Source
+ * can point straight at one mode (.../#/open) and the browser back button works.
  */
 import heroes from './heroes.json';
 import { portrait } from './team-picker.js';
@@ -42,6 +41,6 @@ function render() {
 addEventListener('hashchange', render);
 render();
 
-// Precarga en segundo plano: sin esto el primer giro parpadea mientras el
-// navegador va pidiendo cada retrato.
+// Background preload: without it the first spin flickers while the browser
+// fetches each portrait on demand.
 for (const h of heroes) new Image().src = portrait(h.key);

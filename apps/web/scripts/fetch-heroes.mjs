@@ -1,10 +1,10 @@
 /**
- * Baja el roster y los retratos oficiales UNA VEZ; el resultado se commitea.
- * Así la app publicada no depende en runtime ni de esta API ni del CDN de Blizzard.
+ * Downloads the roster and the official portraits ONCE; the result is committed.
+ * That way the published app depends on neither this API nor Blizzard's CDN at runtime.
  *
  *   pnpm --filter web fetch-heroes
  *
- * Es idempotente: los retratos ya descargados se saltan (--force los vuelve a bajar).
+ * Idempotent: portraits already on disk are skipped (--force re-downloads them).
  */
 import { mkdir, writeFile, access } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
@@ -12,13 +12,13 @@ import { fileURLToPath } from 'node:url';
 import sharp from 'sharp';
 
 const API = 'https://overfast-api.tekrop.fr/heroes';
-// Los PNG oficiales son 256x256 sin comprimir (~190 KB). En WebP bajan a ~18 KB,
-// que para un Browser Source de OBS es la diferencia entre 8 MB y 1 MB de carga.
+// The official PNGs are uncompressed 256x256 (~190 KB). As WebP they drop to ~18 KB,
+// which for an OBS Browser Source is the difference between an 8 MB and a 1 MB load.
 const WEBP_QUALITY = 82;
 
 /**
- * Red de seguridad: si Blizzard saca un héroe y OverFast tarda en indexarlo,
- * añádelo aquí y vuelve a ejecutar. Formato: {key, name, role, portrait}
+ * Safety net: if Blizzard ships a hero and OverFast is slow to index it, add it
+ * here and re-run. Shape: {key, name, role, portrait}
  * @type {{key: string, name: string, role: 'tank'|'damage'|'support', portrait: string}[]}
  */
 const EXTRA_HEROES = [];
@@ -32,30 +32,30 @@ const exists = (p) => access(p).then(() => true, () => false);
 
 async function main() {
   const res = await fetch(API);
-  if (!res.ok) throw new Error(`${API} respondió ${res.status} ${res.statusText}`);
+  if (!res.ok) throw new Error(`${API} answered ${res.status} ${res.statusText}`);
 
   const raw = [...(await res.json()), ...EXTRA_HEROES];
   const seen = new Set();
   const heroes = raw.filter((h) => {
     if (!h?.key || !h?.name || !h?.portrait || !ROLES.has(h.role)) return false;
-    if (seen.has(h.key)) return false; // EXTRA_HEROES gana si duplica: filtramos el segundo
+    if (seen.has(h.key)) return false; // first entry wins on duplicates
     seen.add(h.key);
     return true;
   });
 
-  if (heroes.length < 30) throw new Error(`Solo ${heroes.length} héroes válidos, la API debe estar rota.`);
+  if (heroes.length < 30) throw new Error(`Only ${heroes.length} valid heroes; the API must be broken.`);
 
   await mkdir(imgDir, { recursive: true });
   await mkdir(join(root, 'src'), { recursive: true });
 
-  let bajados = 0;
+  let downloaded = 0;
   for (const h of heroes) {
     const file = join(imgDir, `${h.key}.webp`);
     if (!force && (await exists(file))) continue;
     const img = await fetch(h.portrait);
-    if (!img.ok) throw new Error(`Retrato de ${h.name}: ${img.status}`);
+    if (!img.ok) throw new Error(`Portrait for ${h.name}: ${img.status}`);
     await sharp(Buffer.from(await img.arrayBuffer())).webp({ quality: WEBP_QUALITY }).toFile(file);
-    bajados++;
+    downloaded++;
   }
 
   const data = heroes
@@ -63,8 +63,8 @@ async function main() {
     .sort((a, b) => a.name.localeCompare(b.name, 'en'));
   await writeFile(join(root, 'src', 'heroes.json'), JSON.stringify(data, null, 2) + '\n');
 
-  const porRol = data.reduce((acc, h) => ({ ...acc, [h.role]: (acc[h.role] ?? 0) + 1 }), {});
-  console.log(`${data.length} héroes (${JSON.stringify(porRol)}) · ${bajados} retratos nuevos`);
+  const byRole = data.reduce((acc, h) => ({ ...acc, [h.role]: (acc[h.role] ?? 0) + 1 }), {});
+  console.log(`${data.length} heroes (${JSON.stringify(byRole)}) · ${downloaded} new portraits`);
 }
 
 main().catch((e) => {
