@@ -91,13 +91,11 @@ and the official portraits into `apps/web/public/heroes/`, converting them to We
 hero and OverFast is slow to index it, there is an `EXTRA_HEROES` array at the top of the
 script to add it by hand.
 
-## Publishing
+## Deploying
 
-1. `git init && gh repo create`, push to `main`.
-2. Settings → Pages → **Source: GitHub Actions**.
-
-The `deploy-web` workflow runs the tests before deploying. `deploy-api` is disabled
-(manual only) until the API has something in it — see [apps/api/README.md](apps/api/README.md).
+Pushing to `main` is the deploy: the `deploy-web` workflow runs the tests and, only if
+they pass, publishes `apps/web/dist` to GitHub Pages. `deploy-api` is disabled (manual
+only) until the API has something in it — see [apps/api/README.md](apps/api/README.md).
 
 ## License
 
