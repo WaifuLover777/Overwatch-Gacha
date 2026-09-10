@@ -80,6 +80,10 @@ The published app **makes no request outside its own origin** (verified: 56 requ
 external). The roster and all 53 portraits are committed, so it depends on neither the
 OverFast API nor Blizzard's CDN: if either goes down, the roulette keeps working.
 
+That holds unless you build with `VITE_API_URL` set, which moves the draw to `apps/api`
+(see its README). It is off by default, and even switched on the browser draw stays as the
+fallback: if the API is unreachable the spin still happens, locally.
+
 That is not the same as working without internet. The page loads from GitHub Pages like
 any other, and **it does not work by opening `dist/index.html` directly**: Chrome blocks
 ES modules over `file://` because of CORS. To run it locally you need to serve it

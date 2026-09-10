@@ -3,7 +3,8 @@
  * Each view mounts it with its own mode; players are stored per mode so
  * Role Queue and Open Queue never clobber each other's list.
  */
-import { ROLE_LABELS, ROLES, draw, getMode } from '@ow-gacha/gacha';
+import { ROLE_LABELS, ROLES, getMode } from '@ow-gacha/gacha';
+import { drawPicks } from './api.js';
 import heroes from './heroes.json';
 import { playClick, playFanfare, playLand, playTick } from './audio.js';
 
@@ -52,9 +53,12 @@ const RESET_ICON =
 const INFO_ICON =
   '<circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/>';
 
+// Every glyph above is drawn on a 24x24 grid, so the viewBox is fixed and `size`
+// is the rendered box. Without width/height an inline <svg> has no intrinsic size
+// and CSS falls back to 150x150, which is what blew up the toolbar icons.
 const svg = (body, size = 24) =>
-  `<svg viewBox="0 0 ${size} ${size}" fill="none" stroke="currentColor" stroke-width="2" ` +
-  `stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${body}</svg>`;
+  `<svg viewBox="0 0 24 24" width="${size}" height="${size}" fill="none" stroke="currentColor" ` +
+  `stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${body}</svg>`;
 
 // localStorage can throw (private mode, blocked cookies): it must never take the app down.
 const load = (key, fallback) => {
@@ -129,17 +133,17 @@ export function mountTeamPicker(container, modeKey) {
   // Quick Action Toolbar
   const toolbar = el('div', 'roster-toolbar');
 
-  const sampleBtn = el('button', 'tool-btn', ' Sample Squad');
+  const sampleBtn = el('button', 'tool-btn');
   sampleBtn.type = 'button';
   sampleBtn.innerHTML = `${svg(USERS_ICON, 18)} <span>Sample Squad</span>`;
   sampleBtn.title = 'Fill empty slots with sample hero names';
 
-  const clearBtn = el('button', 'tool-btn', ' Clear Names');
+  const clearBtn = el('button', 'tool-btn');
   clearBtn.type = 'button';
   clearBtn.innerHTML = `${svg(TRASH_ICON, 18)} <span>Clear Names</span>`;
   clearBtn.title = 'Clear all player names';
 
-  const resetBtn = el('button', 'tool-btn', ' Reset Roles');
+  const resetBtn = el('button', 'tool-btn');
   resetBtn.type = 'button';
   resetBtn.innerHTML = `${svg(RESET_ICON, 18)} <span>Reset Roles</span>`;
   resetBtn.title = 'Reset all players to Any Role';
@@ -247,6 +251,7 @@ export function mountTeamPicker(container, modeKey) {
   /* ---------- State & Logic ---------- */
 
   let spinning = false;
+  let unmounted = false; // a draw can be in flight when the view changes
   let ticker = null;
   let lastPicks = null;
   const timers = new Set();
@@ -347,6 +352,12 @@ export function mountTeamPicker(container, modeKey) {
     card.dataset.role = pick.role;
 
     const img = card.querySelector('img');
+    // A server draw reads the roster from OverFast, so it can name a hero shipped
+    // after the last `pnpm fetch-heroes`, with no portrait committed yet.
+    img.onerror = () => {
+      img.onerror = null;
+      img.src = pick.hero.portrait ?? '';
+    };
     img.src = portrait(pick.hero.key);
     img.alt = pick.hero.name;
 
@@ -362,28 +373,35 @@ export function mountTeamPicker(container, modeKey) {
     badge.classList.toggle('is-locked', pick.locked);
     if (pick.locked) {
       badge.title = 'The player asked for this role';
-      badge.innerHTML = `${svg(LOCK_ICON, 14)} <span class="role-text">${ROLE_LABELS[pick.role]}</span> <span class="lock-tag">LOCKED</span>`;
+      // Swap the glyph in place: rebuilding the badge dropped .role-icon, and with
+      // it the CSS that sizes the icon.
+      iconSpan.innerHTML = svg(LOCK_ICON, 16);
+      badge.insertAdjacentHTML('beforeend', '<span class="lock-tag">LOCKED</span>');
     }
 
     playLand(pick.role);
   }
 
-  function spin() {
+  async function spin() {
     if (spinning) return;
+    // Claimed before the await: the draw may be a round trip, and Enter repeats.
+    spinning = true;
+    spinBtn.disabled = true;
 
     let picks;
     try {
-      picks = draw(readPlayers(), mode.key, heroes);
+      picks = await drawPicks(readPlayers(), mode.key, heroes);
     } catch (e) {
       showError(e.message);
+      spinning = false;
+      spinBtn.disabled = false;
       return;
     }
+    if (unmounted) return; // the view changed while the server answered
     showError(null);
     persist();
     lastPicks = picks;
 
-    spinning = true;
-    spinBtn.disabled = true;
     spinBtn.classList.add('is-active');
 
     resultsSection.hidden = false;
@@ -504,6 +522,7 @@ export function mountTeamPicker(container, modeKey) {
   refreshRoleLimits();
 
   return () => {
+    unmounted = true;
     removeEventListener('keydown', onKey);
     if (ticker) clearInterval(ticker);
     for (const t of timers) clearTimeout(t);
