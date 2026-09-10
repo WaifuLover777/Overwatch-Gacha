@@ -1,13 +1,32 @@
 :root {
-  --bg: #0b1118;
-  --panel: #141d28;
-  --line: #26333f;
-  --text: #e9eef4;
-  --dim: #8b9bab;
+  --bg: #090e15;
+  --bg-card: #121a24;
+  --panel: #162231;
+  --panel-hover: #1c2b3e;
+  --panel-active: #22354c;
+  --border: #223244;
+  --border-light: #364d67;
+  --border-bright: #4e6b8c;
+
+  --text: #f0f4f8;
+  --text-muted: #95a7b7;
+  --text-dim: #5c6f82;
+
   --orange: #f99e1a;
-  --tank: #4a7fd4;
-  --damage: #e0574a;
-  --support: #3fae6d;
+  --orange-light: #ffb443;
+  --orange-glow: rgba(249, 158, 26, 0.4);
+
+  --tank: #00a8ff;
+  --tank-glow: rgba(0, 168, 255, 0.45);
+  --damage: #ff4655;
+  --damage-glow: rgba(255, 70, 85, 0.45);
+  --support: #00e676;
+  --support-glow: rgba(0, 230, 118, 0.45);
+
+  --cyan: #00d2ff;
+  --font-display: "Rajdhani", "Montserrat", "Industry", "Impact", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --font-body: "Segoe UI", system-ui, -apple-system, sans-serif;
+
   color-scheme: dark;
 }
 
@@ -15,171 +34,417 @@
   box-sizing: border-box;
 }
 
-body {
+html, body {
   margin: 0;
+  padding: 0;
   min-height: 100vh;
-  background: radial-gradient(900px 500px at 50% -10%, #1b2836, var(--bg));
+  background-color: var(--bg);
   color: var(--text);
-  font: 16px/1.5 "Segoe UI", system-ui, -apple-system, sans-serif;
+  font-family: var(--font-body);
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ---------- Tactical Background Mesh ---------- */
+
+.bg-mesh {
+  position: fixed;
+  inset: 0;
+  background-size: 36px 36px;
+  background-image:
+    linear-gradient(to right, rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.bg-glow {
+  position: fixed;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100vw;
+  height: 600px;
+  background: radial-gradient(circle 500px at 50% 0%, rgba(249, 158, 26, 0.12), rgba(0, 168, 255, 0.04), transparent 70%);
+  pointer-events: none;
+  z-index: 0;
 }
 
 .app {
-  max-width: 900px;
+  position: relative;
+  max-width: 960px;
   margin: 0 auto;
-  padding: 40px 20px 80px;
+  padding: 24px 20px 80px;
+  z-index: 1;
 }
 
-/* ---------- header ---------- */
+/* ---------- Top Bar & Sound Toggle ---------- */
+
+.top-bar {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.sound-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 12px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: rgba(22, 34, 49, 0.6);
+  color: var(--text-muted);
+  font-family: var(--font-display);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  backdrop-filter: blur(4px);
+}
+
+.sound-btn:hover {
+  border-color: var(--orange);
+  color: var(--orange-light);
+  background: rgba(249, 158, 26, 0.08);
+}
+
+.sound-btn.is-muted {
+  color: var(--text-dim);
+  border-color: rgba(255, 255, 255, 0.06);
+}
+
+/* ---------- Header ---------- */
 
 .head {
   text-align: center;
-  margin-bottom: 32px;
+  margin-bottom: 24px;
 }
 
 .head h1 {
   margin: 0;
-  font-size: clamp(28px, 6vw, 48px);
-  font-weight: 800;
+  font-family: var(--font-display);
+  font-size: clamp(32px, 7vw, 54px);
+  font-weight: 900;
+  font-style: italic;
   letter-spacing: 0.08em;
+  line-height: 1.1;
+  text-transform: uppercase;
 }
 
 .head h1 em {
   color: var(--orange);
-  font-style: normal;
+  font-style: italic;
+  text-shadow: 0 0 24px var(--orange-glow);
 }
 
-.head p {
-  margin: 8px 0 0;
-  color: var(--dim);
-  font-size: 14px;
-}
-
-/* ---------- mode nav ---------- */
+/* ---------- Mode Navigation ---------- */
 
 .modes {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 10px;
+  gap: 12px;
   margin-bottom: 20px;
 }
 
 .mode {
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  padding: 14px;
-  border: 1px solid var(--line);
+  gap: 6px;
+  padding: 16px 18px;
+  border: 1px solid var(--border);
   border-radius: 10px;
-  background: var(--panel);
-  color: var(--dim);
-  font: inherit;
-  font-weight: 700;
-  text-align: center;
+  background: linear-gradient(180deg, rgba(26, 38, 54, 0.7) 0%, rgba(18, 26, 36, 0.9) 100%);
+  color: var(--text-muted);
   text-decoration: none;
   cursor: pointer;
-  transition: border-color 0.15s, color 0.15s, background 0.15s;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  backdrop-filter: blur(8px);
+  position: relative;
+  overflow: hidden;
 }
 
-.mode:focus-visible {
-  outline: 2px solid var(--orange);
-  outline-offset: 2px;
-}
-
-.mode small {
-  font-weight: 400;
-  font-size: 12px;
-  opacity: 0.8;
+.mode::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: transparent;
+  transition: background 0.2s ease, box-shadow 0.2s ease;
 }
 
 .mode:hover {
-  border-color: #3a4b5c;
+  border-color: var(--border-light);
+  color: var(--text);
+  transform: translateY(-2px);
 }
 
 .mode[aria-current="page"] {
   border-color: var(--orange);
-  background: #1d2635;
+  background: linear-gradient(180deg, rgba(37, 49, 68, 0.85) 0%, rgba(20, 29, 41, 0.95) 100%);
   color: var(--text);
+  box-shadow: 0 4px 20px -4px rgba(249, 158, 26, 0.25);
 }
 
-/* The active mode's rules, written by its module in packages/gacha/modes. */
-.hint {
-  margin: 0 0 16px;
-  padding: 10px 14px;
-  border-left: 3px solid var(--orange);
+.mode[aria-current="page"]::before {
+  background: var(--orange);
+  box-shadow: 0 0 10px var(--orange);
+}
+
+.mode-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.mode-title {
+  font-family: var(--font-display);
+  font-size: 17px;
+  font-weight: 800;
+  font-style: italic;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.mode-badge {
+  padding: 2px 7px;
+  border-radius: 4px;
+  background: rgba(249, 158, 26, 0.12);
+  border: 1px solid rgba(249, 158, 26, 0.35);
+  color: var(--orange-light);
+  font-family: var(--font-display);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+}
+
+.mode-summary {
+  font-size: 12.5px;
+  color: var(--text-dim);
+  line-height: 1.4;
+}
+
+.mode[aria-current="page"] .mode-summary {
+  color: var(--text-muted);
+}
+
+/* ---------- Intel Hint Card ---------- */
+
+.hint-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 16px;
+  padding: 12px 16px;
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--orange);
   border-radius: 0 8px 8px 0;
-  background: #16202c;
-  color: var(--dim);
-  font-size: 13px;
+  background: rgba(18, 28, 40, 0.75);
+  backdrop-filter: blur(6px);
 }
 
-/* ---------- players ---------- */
+.hint-icon {
+  width: 24px;
+  height: 24px;
+  color: var(--orange);
+  flex-shrink: 0;
+}
+
+.hint-content {
+  flex: 1;
+}
+
+.hint-label {
+  display: block;
+  font-family: var(--font-display);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  color: var(--orange);
+  margin-bottom: 2px;
+}
+
+.hint-text {
+  margin: 0;
+  font-size: 13px;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+
+/* ---------- Roster Quick Action Toolbar ---------- */
+
+.roster-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+
+.tool-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--panel);
+  color: var(--text-muted);
+  font-family: var(--font-display);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.tool-btn svg {
+  color: var(--text-dim);
+  transition: color 0.15s ease;
+}
+
+.tool-btn:hover {
+  border-color: var(--border-light);
+  color: var(--text);
+  background: var(--panel-hover);
+  transform: translateY(-1px);
+}
+
+.tool-btn:hover svg {
+  color: var(--orange);
+}
+
+/* ---------- Player Roster Grid ---------- */
 
 .players {
   display: grid;
-  /* A 900px-wide field to type "Ana" is absurd: it splits into columns when there is room. */
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 8px;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 10px;
   margin-bottom: 20px;
 }
 
 .player {
   display: grid;
-  grid-template-columns: 20px 1fr auto;
+  grid-template-columns: auto 1fr auto;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: rgba(20, 30, 42, 0.7);
+  transition: border-color 0.15s ease, background 0.15s ease;
 }
 
-.player .num {
-  color: var(--dim);
+.player:hover {
+  border-color: var(--border-light);
+  background: rgba(24, 36, 50, 0.85);
+}
+
+.player-index {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  background: rgba(10, 16, 24, 0.6);
+  border: 1px solid var(--border);
+  font-family: var(--font-display);
+  font-weight: 800;
   font-size: 13px;
-  text-align: center;
+  letter-spacing: 0.05em;
+  color: var(--text-dim);
 }
 
-.player input {
-  min-width: 90px;
-  padding: 12px 14px;
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  background: var(--panel);
+.player-index .index-hash {
+  color: var(--orange);
+  margin-right: 1px;
+}
+
+.player-index .index-val {
+  color: var(--text-muted);
+}
+
+.input-wrap {
+  position: relative;
+  min-width: 0;
+}
+
+.input-wrap input {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: rgba(11, 17, 24, 0.9);
   color: var(--text);
-  font: inherit;
+  font-family: inherit;
+  font-size: 14.5px;
+  transition: all 0.15s ease;
 }
 
-.player input:focus-visible {
-  outline: 2px solid var(--orange);
-  outline-offset: 1px;
+.input-wrap input:hover {
+  border-color: var(--border-light);
 }
 
-/* ---------- role lock ---------- */
+.input-wrap input:focus-visible {
+  outline: none;
+  border-color: var(--orange);
+  box-shadow: 0 0 10px rgba(249, 158, 26, 0.35);
+}
+
+.input-wrap input::placeholder {
+  color: var(--text-dim);
+  font-style: italic;
+}
+
+/* ---------- Role Lock Selectors ---------- */
 
 .roles {
   display: flex;
-  gap: 3px;
+  align-items: center;
+  gap: 4px;
 }
 
 .role-pick {
   display: grid;
   place-items: center;
-  width: 32px;
-  height: 32px;
+  width: 34px;
+  height: 34px;
   padding: 0;
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  background: var(--panel);
-  color: var(--dim);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: rgba(12, 19, 28, 0.8);
+  color: var(--text-dim);
   cursor: pointer;
-  transition: color 0.15s, border-color 0.15s, background 0.15s;
+  transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
 }
 
 .role-pick svg {
-  width: 17px;
-  height: 17px;
+  width: 18px;
+  height: 18px;
+  transition: transform 0.15s ease;
 }
 
-/* "Any role" sits apart: it is the escape hatch, not a fourth role. */
+.role-pick:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.role-pick:hover:not(:disabled) svg {
+  transform: scale(1.1);
+}
+
+/* Any / Random Die */
 .role-pick.is-any {
   --pick: var(--orange);
   margin-right: 4px;
+  border-color: rgba(249, 158, 26, 0.3);
 }
 
 .role-pick[data-role="tank"] {
@@ -192,9 +457,10 @@ body {
   --pick: var(--support);
 }
 
-.role-pick:hover {
+.role-pick:hover:not(:disabled) {
   color: var(--pick);
   border-color: var(--pick);
+  box-shadow: 0 0 8px rgba(255, 255, 255, 0.08);
 }
 
 .role-pick:focus-visible {
@@ -202,83 +468,236 @@ body {
   outline-offset: 1px;
 }
 
-/* Pressed = the player accepts this role. One, two or all three may be on;
-   none on means any role, which lights up the dice instead. */
+/* Pressed State */
 .role-pick[aria-pressed="true"] {
-  color: #0b1118;
+  color: #080d13;
   border-color: var(--pick);
   background: var(--pick);
+  box-shadow: 0 0 14px var(--pick);
 }
 
-/* Accepting (or dropping) this role would leave no legal team. */
+.role-pick.is-any[aria-pressed="true"] {
+  background: linear-gradient(135deg, #ffa826, var(--orange));
+  color: #0b1118;
+}
+
+/* Disabled State */
 .role-pick:disabled {
-  opacity: 0.28;
+  opacity: 0.22;
   cursor: not-allowed;
+  border-color: rgba(255, 255, 255, 0.05);
 }
 
 .role-pick:disabled:hover {
-  color: var(--dim);
-  border-color: var(--line);
+  transform: none;
+  box-shadow: none;
 }
 
-/* ---------- button ---------- */
+/* ---------- GACHA Trigger Button ---------- */
+
+.spin-section {
+  margin-bottom: 24px;
+}
 
 .spin {
+  position: relative;
   width: 100%;
-  padding: 18px;
+  padding: 18px 24px;
   border: 0;
-  border-radius: 10px;
-  background: linear-gradient(180deg, #ffb43f, var(--orange));
-  color: #241704;
-  font: inherit;
-  font-size: 20px;
-  font-weight: 800;
-  letter-spacing: 0.15em;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #ffb648 0%, #f99e1a 50%, #df8105 100%);
+  color: #120b02;
+  font-family: var(--font-display);
+  font-size: 24px;
+  font-weight: 900;
+  font-style: italic;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
   cursor: pointer;
+  overflow: hidden;
+  box-shadow: 0 6px 25px -4px rgba(249, 158, 26, 0.5);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  clip-path: polygon(14px 0, 100% 0, calc(100% - 14px) 100%, 0 100%);
+}
+
+.spin-sheen {
+  position: absolute;
+  top: 0;
+  left: -120%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.45), transparent);
+  transform: skewX(-20deg);
+  animation: sweep 3.5s infinite;
+}
+
+@keyframes sweep {
+  0%, 70% { left: -120%; }
+  100% { left: 160%; }
+}
+
+.spin-content {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+
+.spin-keyhint {
+  font-size: 12px;
+  font-weight: 700;
+  font-style: normal;
+  letter-spacing: 0.1em;
+  background: rgba(0, 0, 0, 0.25);
+  padding: 3px 8px;
+  border-radius: 4px;
+  color: rgba(255, 255, 255, 0.85);
 }
 
 .spin:hover:not(:disabled) {
-  filter: brightness(1.1);
+  filter: brightness(1.12);
+  transform: translateY(-2px) scale(1.01);
+  box-shadow: 0 8px 30px rgba(249, 158, 26, 0.65);
+}
+
+.spin:active:not(:disabled) {
+  transform: translateY(1px) scale(0.99);
 }
 
 .spin:disabled {
-  opacity: 0.5;
+  opacity: 0.75;
   cursor: wait;
+  filter: grayscale(0.2);
+}
+
+.spin.is-active {
+  animation: pulse-spin 0.8s infinite alternate;
+}
+
+@keyframes pulse-spin {
+  from { filter: brightness(1); }
+  to { filter: brightness(1.25); box-shadow: 0 0 35px var(--orange); }
 }
 
 .error {
   margin: 14px 0 0;
-  padding: 12px 14px;
-  border: 1px solid #7b3030;
+  padding: 12px 16px;
+  border: 1px solid #7b2e2e;
   border-radius: 8px;
-  background: #2a1618;
-  color: #ffb3ab;
-  font-size: 14px;
+  background: rgba(42, 18, 22, 0.85);
+  color: #ffb5ad;
+  font-size: 13.5px;
+  backdrop-filter: blur(4px);
 }
 
-/* ---------- results ---------- */
+/* ---------- Results Section & Breakdown ---------- */
+
+.results-section {
+  margin-top: 28px;
+}
+
+.results-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 16px;
+  padding: 10px 14px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: rgba(18, 26, 36, 0.7);
+  backdrop-filter: blur(6px);
+}
+
+.comp-breakdown {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.comp-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 5px;
+  font-family: var(--font-display);
+  font-size: 11.5px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+
+.comp-badge.is-tank {
+  background: rgba(0, 168, 255, 0.12);
+  border: 1px solid rgba(0, 168, 255, 0.35);
+  color: var(--tank);
+}
+
+.comp-badge.is-damage {
+  background: rgba(255, 70, 85, 0.12);
+  border: 1px solid rgba(255, 70, 85, 0.35);
+  color: var(--damage);
+}
+
+.comp-badge.is-support {
+  background: rgba(0, 230, 118, 0.12);
+  border: 1px solid rgba(0, 230, 118, 0.35);
+  color: var(--support);
+}
+
+.copy-squad-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 14px;
+  border: 1px solid var(--orange);
+  border-radius: 6px;
+  background: rgba(249, 158, 26, 0.12);
+  color: var(--orange-light);
+  font-family: var(--font-display);
+  font-size: 12.5px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.copy-squad-btn:hover {
+  background: var(--orange);
+  color: #0b1118;
+  box-shadow: 0 0 15px var(--orange-glow);
+  transform: translateY(-1px);
+}
+
+/* ---------- Results Grid & Hero Cards ---------- */
 
 .results {
   display: grid;
-  /* 110px is the smallest min that fits all 6 of Open Queue on one row from
-     tablet up (150px left 5 + 1 orphan) and 2 per row on phones. */
-  grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(135px, 1fr));
   gap: 12px;
-  margin: 28px 0 0;
+  margin: 0;
   padding: 0;
   list-style: none;
 }
 
 .card {
-  --role: var(--line); /* until the role is revealed */
+  --role: var(--border-light);
+  position: relative;
   display: flex;
   flex-direction: column;
-  padding: 12px;
-  border: 1px solid var(--line);
+  padding: 10px;
+  border: 1px solid var(--border);
   border-top: 3px solid var(--role);
-  border-radius: 10px;
-  background: var(--panel);
+  border-radius: 8px;
+  background: linear-gradient(180deg, rgba(24, 34, 48, 0.95) 0%, rgba(14, 20, 29, 0.95) 100%);
   text-align: center;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  overflow: hidden;
+  backdrop-filter: blur(6px);
 }
 
 .card[data-role="tank"] {
@@ -291,96 +710,275 @@ body {
   --role: var(--support);
 }
 
-.card img {
-  width: 100%;
-  aspect-ratio: 1;
-  object-fit: cover;
-  border-radius: 8px;
-  background: #0d141c;
+.card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+  padding: 0 2px;
+}
+
+.card-slot {
+  font-family: var(--font-display);
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--orange);
 }
 
 .card .who {
-  margin-top: 10px;
-  color: var(--dim);
-  font-size: 12px;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  overflow-wrap: anywhere;
-}
-
-.card .hero {
-  font-size: 17px;
+  color: var(--text-muted);
+  font-size: 11.5px;
   font-weight: 700;
-  overflow-wrap: anywhere;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 85px;
 }
 
-/* Pinned to the bottom: badges stay aligned when a hero name wraps to two lines. */
-.card .role-row {
-  margin-top: auto;
+.card-portrait-wrap {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: 6px;
+  overflow: hidden;
+  background: #0a0f16;
+}
+
+.card img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.3s ease;
+}
+
+/* Corner HUD Brackets */
+.card-brackets {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.card-brackets span {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.b-tl { top: 3px; left: 3px; border-top: 1.5px solid; border-left: 1.5px solid; }
+.b-tr { top: 3px; right: 3px; border-top: 1.5px solid; border-right: 1.5px solid; }
+.b-bl { bottom: 3px; left: 3px; border-bottom: 1.5px solid; border-left: 1.5px solid; }
+.b-br { bottom: 3px; right: 3px; border-bottom: 1.5px solid; border-right: 1.5px solid; }
+
+.card-analyzing {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(10, 16, 24, 0.45);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.analyzing-text {
+  font-family: var(--font-display);
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  color: var(--orange-light);
+  background: rgba(0, 0, 0, 0.65);
+  padding: 3px 8px;
+  border-radius: 3px;
+  border: 1px solid var(--orange);
+}
+
+.card.spinning .card-analyzing {
+  opacity: 1;
+}
+
+.card-meta {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
   padding-top: 8px;
 }
 
+.card .hero {
+  font-family: var(--font-display);
+  font-size: 17px;
+  font-weight: 800;
+  font-style: italic;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text);
+  overflow-wrap: anywhere;
+  margin-bottom: 6px;
+}
+
+.card .role-row {
+  margin-top: auto;
+  padding-top: 4px;
+}
+
 .card .role {
-  display: inline-block;
-  padding: 2px 8px;
-  border-radius: 99px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  width: 100%;
+  padding: 4px 6px;
+  border-radius: 4px;
   background: var(--role);
-  color: #0b1118;
+  color: #080e15;
+  font-family: var(--font-display);
   font-size: 11px;
-  font-weight: 700;
+  font-weight: 800;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
 }
 
-/* Chosen by the player, not rolled: outlined instead of filled, so the
-   result never claims the roulette picked it. */
+.card .role-icon {
+  display: grid;
+  place-items: center;
+}
+
+.card .role-icon svg {
+  width: 14px;
+  height: 14px;
+}
+
+/* Locked Role Badge */
 .card .role.is-locked {
   background: transparent;
   border: 1px solid var(--role);
   color: var(--role);
 }
 
-.card .role.is-locked::after {
-  content: " \00b7 locked";
-  opacity: 0.75;
+.card .role .lock-tag {
+  font-size: 9px;
+  opacity: 0.85;
+  margin-left: 2px;
 }
 
-/* While spinning the role is unknown, so everything but the portrait dims. */
+/* Spinning Animation */
+.card.spinning {
+  border-top-color: var(--orange);
+}
+
 .card.spinning img {
-  animation: shake 0.28s linear infinite;
+  filter: saturate(1.4) brightness(0.9);
+  animation: shake 0.24s linear infinite;
 }
 
 .card.spinning .hero,
 .card.spinning .role {
-  opacity: 0.35;
+  opacity: 0.4;
 }
 
+/* Landed Reveal Animation */
 .card.landed {
-  animation: land 0.45s cubic-bezier(0.2, 1.4, 0.4, 1);
+  border-color: var(--border-light);
+  border-top-color: var(--role);
+  animation: land-impact 0.45s cubic-bezier(0.18, 1.4, 0.35, 1);
+  box-shadow: 0 0 18px -4px var(--role);
+}
+
+.card.landed:hover {
+  transform: translateY(-3px) scale(1.02);
+  box-shadow: 0 0 25px -2px var(--role);
+}
+
+.card.landed:hover img {
+  transform: scale(1.06);
 }
 
 @keyframes shake {
-  50% {
-    transform: translateY(-3px) scale(0.98);
-  }
+  0% { transform: translate(0, 0); }
+  25% { transform: translate(-2px, 2px); }
+  50% { transform: translate(2px, -2px); }
+  75% { transform: translate(-1px, -1px); }
+  100% { transform: translate(0, 0); }
 }
 
-@keyframes land {
+@keyframes land-impact {
   0% {
-    transform: scale(0.85);
+    transform: scale(0.82);
     box-shadow: 0 0 0 0 var(--role);
   }
-  60% {
-    transform: scale(1.06);
+  50% {
+    transform: scale(1.08);
   }
   100% {
     transform: scale(1);
-    box-shadow: 0 0 22px -6px var(--role);
+    box-shadow: 0 0 22px -4px var(--role);
+  }
+}
+
+/* ---------- Toast Notification ---------- */
+
+.toast {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%) translateY(40px);
+  padding: 10px 20px;
+  border: 1px solid var(--orange);
+  border-radius: 8px;
+  background: rgba(14, 21, 30, 0.95);
+  color: var(--text);
+  font-family: var(--font-display);
+  font-size: 13.5px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.6), 0 0 15px var(--orange-glow);
+  opacity: 0;
+  pointer-events: none;
+  transition: all 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+  z-index: 100;
+  backdrop-filter: blur(10px);
+}
+
+.toast.visible {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* ---------- Media Queries & Accessibility ---------- */
+
+@media (max-width: 680px) {
+  .app {
+    padding: 16px 12px 60px;
+  }
+
+  .modes {
+    grid-template-columns: 1fr;
+  }
+
+  .results {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .spin {
+    font-size: 20px;
+    padding: 15px 20px;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .card.spinning img,
-  .card.landed {
-    animation: none;
+  .card.landed,
+  .spin-sheen,
+  .spin.is-active {
+    animation: none !important;
+  }
+
+  .card, .mode, .spin, .tool-btn {
+    transition: none !important;
   }
 }

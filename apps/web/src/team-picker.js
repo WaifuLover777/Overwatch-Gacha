@@ -5,9 +5,10 @@
  */
 import { ROLE_LABELS, ROLES, draw, getMode } from '@ow-gacha/gacha';
 import heroes from './heroes.json';
+import { playClick, playFanfare, playLand, playTick } from './audio.js';
 
-const TICK_MS = 70; // spin speed
-const FIRST_LAND_MS = 800; // how long it spins before the first card lands
+const TICK_MS = 65; // spin speed
+const FIRST_LAND_MS = 850; // how long it spins before the first card lands
 const STAGGER_MS = 280; // gap between card reveals
 
 const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -28,8 +29,31 @@ const RANDOM_ICON =
   '<circle cx="12" cy="12" r="1.25" fill="currentColor" stroke="none"/>' +
   '<circle cx="15.4" cy="15.4" r="1.25" fill="currentColor" stroke="none"/>';
 
-const svg = (body) =>
-  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" ' +
+const LOCK_ICON =
+  '<rect x="5" y="11" width="14" height="10" rx="2" ry="2"/>' +
+  '<path d="M8 11V7a4 4 0 0 1 8 0v4"/>';
+
+const COPY_ICON =
+  '<rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>' +
+  '<path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>';
+
+const TRASH_ICON =
+  '<path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>';
+
+const USERS_ICON =
+  '<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>' +
+  '<circle cx="9" cy="7" r="4"/>' +
+  '<path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>';
+
+const RESET_ICON =
+  '<path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>' +
+  '<path d="M3 3v5h5"/>';
+
+const INFO_ICON =
+  '<circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/>';
+
+const svg = (body, size = 24) =>
+  `<svg viewBox="0 0 ${size} ${size}" fill="none" stroke="currentColor" stroke-width="2" ` +
   `stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${body}</svg>`;
 
 // localStorage can throw (private mode, blocked cookies): it must never take the app down.
@@ -61,6 +85,26 @@ const el = (tag, className, text) => {
   return node;
 };
 
+let toastTimer = null;
+function showToast(msg) {
+  const toast = document.getElementById('toast');
+  if (!toast) return;
+  toast.textContent = msg;
+  toast.hidden = false;
+  requestAnimationFrame(() => {
+    toast.classList.add('visible');
+  });
+  if (toastTimer) clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => {
+    toast.classList.remove('visible');
+    setTimeout(() => {
+      toast.hidden = true;
+    }, 280);
+  }, 2400);
+}
+
+const SAMPLE_NAMES = ['Tracer', 'Reinhardt', 'Genji', 'Mercy', 'Kiriko', 'D.Va'];
+
 /**
  * @param {HTMLElement} container
  * @param {string} modeKey
@@ -70,37 +114,63 @@ export function mountTeamPicker(container, modeKey) {
   const mode = getMode(modeKey);
   const STORE_KEY = `ow-gacha:players:${mode.key}`;
 
-  /* ---------- DOM ---------- */
+  /* ---------- DOM Construction ---------- */
 
-  const hint = el('p', 'hint', mode.rules);
+  // Hint Intel Card
+  const hint = el('div', 'hint-card');
+  hint.innerHTML = `
+    <div class="hint-icon">${svg(INFO_ICON)}</div>
+    <div class="hint-content">
+      <span class="hint-label">${mode.label.toUpperCase()} PROTOCOL</span>
+      <p class="hint-text">${mode.rules}</p>
+    </div>
+  `;
+
+  // Quick Action Toolbar
+  const toolbar = el('div', 'roster-toolbar');
+
+  const sampleBtn = el('button', 'tool-btn', ' Sample Squad');
+  sampleBtn.type = 'button';
+  sampleBtn.innerHTML = `${svg(USERS_ICON, 18)} <span>Sample Squad</span>`;
+  sampleBtn.title = 'Fill empty slots with sample hero names';
+
+  const clearBtn = el('button', 'tool-btn', ' Clear Names');
+  clearBtn.type = 'button';
+  clearBtn.innerHTML = `${svg(TRASH_ICON, 18)} <span>Clear Names</span>`;
+  clearBtn.title = 'Clear all player names';
+
+  const resetBtn = el('button', 'tool-btn', ' Reset Roles');
+  resetBtn.type = 'button';
+  resetBtn.innerHTML = `${svg(RESET_ICON, 18)} <span>Reset Roles</span>`;
+  resetBtn.title = 'Reset all players to Any Role';
+
+  toolbar.append(sampleBtn, clearBtn, resetBtn);
+
+  // Form with Player Roster
   const form = el('form', 'players');
-  const spinBtn = el('button', 'spin', 'GACHA');
-  spinBtn.type = 'button';
-  const errorBox = el('p', 'error');
-  errorBox.setAttribute('role', 'alert');
-  errorBox.hidden = true;
-  const results = el('ul', 'results');
-  results.setAttribute('aria-live', 'polite');
-
   const saved = load(STORE_KEY, []);
 
   for (let i = 0; i < mode.maxPlayers; i++) {
     const row = el('div', 'player');
     const chosen = savedRoles(saved[i]);
 
+    const numBadge = el('div', 'player-index');
+    numBadge.innerHTML = `<span class="index-hash">#</span><span class="index-val">${String(i + 1).padStart(2, '0')}</span>`;
+
+    const inputWrap = el('div', 'input-wrap');
     const input = el('input');
     input.type = 'text';
     input.maxLength = 24;
     input.value = saved[i]?.name ?? '';
     input.placeholder = `Player ${i + 1}`;
     input.setAttribute('aria-label', `Player ${i + 1} name`);
+    inputWrap.append(input);
 
     const picker = el('div', 'roles');
     picker.setAttribute('role', 'group');
     picker.setAttribute('aria-label', `Player ${i + 1} roles`);
 
-    // Any role: clears the row. Always available, which is what stops a set of
-    // picks from ever painting the user into a corner.
+    // Any role: clears the row.
     const anyBtn = el('button', 'role-pick is-any');
     anyBtn.type = 'button';
     anyBtn.dataset.any = '';
@@ -108,6 +178,7 @@ export function mountTeamPicker(container, modeKey) {
     anyBtn.setAttribute('aria-pressed', String(chosen.length === 0));
     anyBtn.innerHTML = svg(RANDOM_ICON);
     anyBtn.addEventListener('click', () => {
+      playClick();
       for (const b of picker.querySelectorAll('[data-role]')) b.setAttribute('aria-pressed', 'false');
       refreshRoleLimits();
       persist();
@@ -121,8 +192,9 @@ export function mountTeamPicker(container, modeKey) {
       btn.setAttribute('aria-label', ROLE_LABELS[role]);
       btn.setAttribute('aria-pressed', String(chosen.includes(role)));
       btn.innerHTML = svg(ROLE_ICON[role]);
-      // Roles add up: a player can accept one, two or all three.
+
       btn.addEventListener('click', () => {
+        playClick();
         const on = btn.getAttribute('aria-pressed') === 'true';
         btn.setAttribute('aria-pressed', String(!on));
         refreshRoleLimits();
@@ -131,16 +203,52 @@ export function mountTeamPicker(container, modeKey) {
       picker.append(btn);
     }
 
-    row.append(el('span', 'num', String(i + 1)), input, picker);
+    row.append(numBadge, inputWrap, picker);
     form.append(row);
   }
 
-  container.replaceChildren(hint, form, spinBtn, errorBox, results);
+  // Spin Trigger Section
+  const spinWrap = el('div', 'spin-section');
+  const spinBtn = el('button', 'spin');
+  spinBtn.type = 'button';
+  spinBtn.innerHTML = `
+    <span class="spin-sheen"></span>
+    <span class="spin-content">
+      <span class="spin-glitch">GACHA</span>
+      <span class="spin-keyhint">[ENTER]</span>
+    </span>
+  `;
 
-  /* ---------- state ---------- */
+  const errorBox = el('p', 'error');
+  errorBox.setAttribute('role', 'alert');
+  errorBox.hidden = true;
+
+  spinWrap.append(spinBtn, errorBox);
+
+  // Results Section
+  const resultsSection = el('div', 'results-section');
+  resultsSection.hidden = true;
+
+  const resultsHeader = el('div', 'results-header');
+  const compBreakdown = el('div', 'comp-breakdown');
+  const copySquadBtn = el('button', 'copy-squad-btn');
+  copySquadBtn.type = 'button';
+  copySquadBtn.innerHTML = `${svg(COPY_ICON, 18)} <span>Copy Team to Clipboard</span>`;
+
+  resultsHeader.append(compBreakdown, copySquadBtn);
+
+  const results = el('ul', 'results');
+  results.setAttribute('aria-live', 'polite');
+
+  resultsSection.append(resultsHeader, results);
+
+  container.replaceChildren(hint, toolbar, form, spinWrap, resultsSection);
+
+  /* ---------- State & Logic ---------- */
 
   let spinning = false;
   let ticker = null;
+  let lastPicks = null;
   const timers = new Set();
   const later = (fn, ms) => {
     const t = setTimeout(() => {
@@ -152,23 +260,14 @@ export function mountTeamPicker(container, modeKey) {
 
   const rows = () => [...form.querySelectorAll('.player')];
 
-  /** The roles this row accepts. Empty means any, which is the random case. */
   const rowRoles = (row) =>
     [...row.querySelectorAll('.role-pick[data-role][aria-pressed="true"]')].map((b) => b.dataset.role);
 
-  /** One entry per row: the typed name plus the roles that player accepts. */
   const readPlayers = () =>
     rows().map((row) => ({ name: row.querySelector('input').value, roles: rowRoles(row) }));
 
   const persist = () => save(STORE_KEY, readPlayers());
 
-  /**
-   * Disable the role toggles that would leave no legal team at all, asking the
-   * mode instead of knowing its rules. A new mode needs no change here.
-   *
-   * Widening a set can never remove a solution, so "Any role" is never disabled
-   * and always offers a way back out of a dead end.
-   */
   function refreshRoleLimits() {
     const all = rows().map(rowRoles);
 
@@ -199,12 +298,46 @@ export function mountTeamPicker(container, modeKey) {
     errorBox.hidden = !msg;
   };
 
-  function makeCard(player) {
+  function updateCompBreakdown(picks) {
+    const counts = { tank: 0, damage: 0, support: 0 };
+    for (const p of picks) counts[p.role]++;
+
+    compBreakdown.innerHTML = `
+      <div class="comp-badge is-tank">${svg(ROLE_ICON.tank, 16)} <span>${counts.tank} TANK</span></div>
+      <div class="comp-badge is-damage">${svg(ROLE_ICON.damage, 16)} <span>${counts.damage} DAMAGE</span></div>
+      <div class="comp-badge is-support">${svg(ROLE_ICON.support, 16)} <span>${counts.support} SUPPORT</span></div>
+    `;
+  }
+
+  function makeCard(player, index) {
     const li = el('li', 'card spinning');
-    li.innerHTML =
-      '<img alt="" src=""><div class="who"></div><div class="hero">???</div>' +
-      '<div class="role-row"><span class="role">···</span></div>';
-    li.querySelector('.who').textContent = player;
+    li.innerHTML = `
+      <div class="card-glow" aria-hidden="true"></div>
+      <div class="card-scanline" aria-hidden="true"></div>
+      <div class="card-top">
+        <span class="card-slot">#${String(index + 1).padStart(2, '0')}</span>
+        <span class="who">${player || `Player ${index + 1}`}</span>
+      </div>
+      <div class="card-portrait-wrap">
+        <img alt="" src="" />
+        <div class="card-brackets" aria-hidden="true">
+          <span class="b-tl"></span><span class="b-tr"></span>
+          <span class="b-bl"></span><span class="b-br"></span>
+        </div>
+        <div class="card-analyzing">
+          <span class="analyzing-text">ANALYZING</span>
+        </div>
+      </div>
+      <div class="card-meta">
+        <div class="hero">···</div>
+        <div class="role-row">
+          <span class="role">
+            <span class="role-icon"></span>
+            <span class="role-text">···</span>
+          </span>
+        </div>
+      </div>
+    `;
     return li;
   }
 
@@ -212,15 +345,27 @@ export function mountTeamPicker(container, modeKey) {
     card.classList.remove('spinning');
     card.classList.add('landed');
     card.dataset.role = pick.role;
+
     const img = card.querySelector('img');
     img.src = portrait(pick.hero.key);
     img.alt = pick.hero.name;
+
     card.querySelector('.hero').textContent = pick.hero.name;
+
     const badge = card.querySelector('.role');
-    badge.textContent = ROLE_LABELS[pick.role];
-    // Only a single accepted role is a real lock; with two the roulette chose.
+    const iconSpan = badge.querySelector('.role-icon');
+    const textSpan = badge.querySelector('.role-text');
+
+    iconSpan.innerHTML = svg(ROLE_ICON[pick.role], 16);
+    textSpan.textContent = ROLE_LABELS[pick.role];
+
     badge.classList.toggle('is-locked', pick.locked);
-    if (pick.locked) badge.title = 'The player asked for this role';
+    if (pick.locked) {
+      badge.title = 'The player asked for this role';
+      badge.innerHTML = `${svg(LOCK_ICON, 14)} <span class="role-text">${ROLE_LABELS[pick.role]}</span> <span class="lock-tag">LOCKED</span>`;
+    }
+
+    playLand(pick.role);
   }
 
   function spin() {
@@ -235,16 +380,32 @@ export function mountTeamPicker(container, modeKey) {
     }
     showError(null);
     persist();
+    lastPicks = picks;
 
     spinning = true;
     spinBtn.disabled = true;
+    spinBtn.classList.add('is-active');
 
-    const cards = picks.map((p) => makeCard(p.player));
+    resultsSection.hidden = false;
+    copySquadBtn.style.visibility = 'hidden';
+    compBreakdown.style.visibility = 'hidden';
+
+    const cards = picks.map((p, i) => makeCard(p.player, i));
     results.replaceChildren(...cards);
+
+    // Scroll results into view smoothly on mobile if needed
+    if (resultsSection.getBoundingClientRect().bottom > window.innerHeight) {
+      resultsSection.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
 
     const done = () => {
       spinning = false;
       spinBtn.disabled = false;
+      spinBtn.classList.remove('is-active');
+      copySquadBtn.style.visibility = 'visible';
+      compBreakdown.style.visibility = 'visible';
+      updateCompBreakdown(picks);
+      playFanfare();
     };
 
     if (reducedMotion) {
@@ -254,13 +415,16 @@ export function mountTeamPicker(container, modeKey) {
     }
 
     ticker = setInterval(() => {
+      playTick();
       for (const card of cards) {
         if (!card.classList.contains('spinning')) continue;
-        card.querySelector('img').src = portrait(heroes[(Math.random() * heroes.length) | 0].key);
+        const randomHero = heroes[(Math.random() * heroes.length) | 0];
+        card.querySelector('img').src = portrait(randomHero.key);
       }
     }, TICK_MS);
 
     cards.forEach((card, i) => later(() => land(card, picks[i]), FIRST_LAND_MS + i * STAGGER_MS));
+
     later(() => {
       clearInterval(ticker);
       ticker = null;
@@ -268,7 +432,59 @@ export function mountTeamPicker(container, modeKey) {
     }, FIRST_LAND_MS + cards.length * STAGGER_MS);
   }
 
-  /* ---------- listeners ---------- */
+  /* ---------- Toolbar Actions ---------- */
+
+  sampleBtn.addEventListener('click', () => {
+    playClick();
+    const inputs = form.querySelectorAll('input');
+    inputs.forEach((input, i) => {
+      if (!input.value.trim()) {
+        input.value = SAMPLE_NAMES[i % SAMPLE_NAMES.length];
+      }
+    });
+    persist();
+    showToast('Sample squad loaded');
+  });
+
+  clearBtn.addEventListener('click', () => {
+    playClick();
+    form.querySelectorAll('input').forEach((input) => (input.value = ''));
+    persist();
+    showToast('Player names cleared');
+  });
+
+  resetBtn.addEventListener('click', () => {
+    playClick();
+    form.querySelectorAll('.player').forEach((row) => {
+      for (const b of row.querySelectorAll('[data-role]')) b.setAttribute('aria-pressed', 'false');
+    });
+    refreshRoleLimits();
+    persist();
+    showToast('All roles reset to Any');
+  });
+
+  copySquadBtn.addEventListener('click', () => {
+    playClick();
+    if (!lastPicks || lastPicks.length === 0) return;
+
+    const lines = [
+      `OVERWATCH GACHA — ${mode.label.toUpperCase()}`,
+      `----------------------------------------`,
+      ...lastPicks.map((p, i) => {
+        const pName = p.player || `Player ${i + 1}`;
+        const lockNote = p.locked ? ' [LOCKED]' : '';
+        return `[${ROLE_LABELS[p.role].toUpperCase()}] ${p.hero.name} — ${pName}${lockNote}`;
+      }),
+      `----------------------------------------`,
+    ];
+
+    navigator.clipboard
+      .writeText(lines.join('\n'))
+      .then(() => showToast('Team copied to clipboard!'))
+      .catch(() => showToast('Failed to copy team'));
+  });
+
+  /* ---------- Event Listeners ---------- */
 
   const onInput = () => persist();
   const onSubmit = (e) => e.preventDefault();
@@ -278,13 +494,15 @@ export function mountTeamPicker(container, modeKey) {
 
   form.addEventListener('input', onInput);
   form.addEventListener('submit', onSubmit);
-  spinBtn.addEventListener('click', spin);
+  spinBtn.addEventListener('click', () => {
+    playClick();
+    spin();
+  });
   addEventListener('keydown', onKey);
 
-  // Restored picks can already sit at a limit, so apply them before first paint.
+  // Initial limits calculation
   refreshRoleLimits();
 
-  // Without this, switching modes mid-spin leaves the interval running.
   return () => {
     removeEventListener('keydown', onKey);
     if (ticker) clearInterval(ticker);
